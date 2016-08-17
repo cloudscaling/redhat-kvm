@@ -5,89 +5,12 @@ my_dir="$(dirname $my_file)"
 
 NUM=0
 BASE_IMAGE="/var/lib/images/CentOS-7-x86_64-GenericCloud-1607.qcow2"
+vm_disk_size="30G"
+poolname="rdimages"
 
-function get_network_name() {
-  local type=$1
-  case "$type" in
-    management)
-      echo "rd-mgmt-$NUM"
-      ;;
-    provisioning)
-      echo "rd-prov-$NUM"
-      ;;
-    external)
-      echo "rd-ext-$NUM"
-      ;;
-    *)
-      return 1
-  esac
-}
+source "$my_dir/functions"
 
-function get_network_ip() {
-  local type=$1
-  case "$type" in
-    management)
-      ((addr=172+NUM*10))
-      ;;
-    provisioning)
-      ((addr=176+NUM*10))
-      ;;
-    external)
-      ((addr=175+NUM*10))
-      ;;
-    *)
-      return 1
-  esac
-  echo "192.168.$addr"
-}
-
-function build_network_xml() {
-  local type="$1"
-  local nname="$2"
-  local fname=`mktemp`
-  local addr=$(get_network_ip $type)
-  case "$type" in
-    management)
-      echo "<network><name>$nname</name><bridge name=\"$nname\" /><forward mode=\"nat\"/><ip address=\"$addr.1\" netmask=\"255.255.255.0\"/></network>" > $fname
-      ;;
-    provisioning)
-      echo "<network><name>$nname</name><bridge name=\"$nname\" /><ip address=\"$addr.1\" netmask=\"255.255.255.0\"/></network>" > $fname
-      ;;
-    external)
-      echo "<network><name>$nname</name><forward mode=\"nat\"><nat><port start=\"1024\" end=\"65535\"/></nat></forward><ip address=\"$addr.1\" netmask=\"255.255.255.0\"><dhcp><range start=\"$addr.2\" end=\"$addr.254\"/></dhcp></ip></network>" > $fname
-      ;;
-    *)
-      return 1
-  esac
-  echo $fname
-}
-
-function create_network {
-  local type="$1"
-  local network_name=`get_network_name $type`
-  virsh net-destroy $network_name 2> /dev/null || true
-  virsh net-undefine $network_name 2> /dev/null || true
-  local fxml=`build_network_xml $type $network_name`
-  virsh net-define $fxml
-  rm $fxml
-  virsh net-autostart $network_name
-  virsh net-start $network_name
-}
-
-function create_pool {
-  local poolname="$1"
-  local path="/var/lib/libvirt/$poolname"
-  virsh pool-define-as $poolname dir - - - - "$path"
-  virsh pool-build $poolname
-  virsh pool-start $poolname
-  virsh pool-autostart $poolname
-}
-
-function get_pool_path {
-  local poolname=$1
-  virsh pool-info $poolname &>/dev/null || return
-  virsh pool-dumpxml $poolname | sed -n '/path/{s/.*<path>\(.*\)<\/path>.*/\1/;p}'
-}
+delete_domains
 
 create_network management
 mgmt_net=`get_network_name management`
@@ -96,18 +19,6 @@ prov_net=`get_network_name provisioning`
 create_network external
 ext_net=`get_network_name external`
 
-
-for i in {1..2} ; do
-  virsh destroy rd-overcloud-$NUM-$i || true
-  sleep 2
-  virsh undefine rd-overcloud-$NUM-$i || true
-done
-virsh destroy rd-undercloud-$NUM || true
-sleep 2
-virsh undefine rd-undercloud-$NUM || true
-
-vm_disk_size="30G"
-poolname="rdimages"
 virsh pool-info $poolname &> /dev/null || create_pool $poolname
 pool_path=$(get_pool_path $poolname)
 for i in {1..2} ; do
@@ -117,10 +28,10 @@ done
 cp $BASE_IMAGE $pool_path/undercloud-$NUM.qcow2
 qemu-img resize $pool_path/undercloud-$NUM.qcow2 +32G
 
-set -x
-
-net_ip=$(get_network_ip "management")
-net_mac="00:16:00:00:0$NUM:01"
+mgmt_ip=$(get_network_ip "management")
+mgmt_mac="00:16:00:00:0$NUM:02"
+prov_ip=$(get_network_ip "provisioning")
+prov_mac="00:16:00:00:0$NUM:06"
 rm -f kp kp.pub
 ssh-keygen -b 2048 -t rsa -f "$my_dir/kp" -q -N ""
 rootpass=`openssl passwd -1 123`
@@ -131,9 +42,15 @@ tmpdir=$(mktemp -d)
 mount /dev/nbd3p1 $tmpdir
 sleep 2
 
-cp "$my_dir/ifcfg-eth0" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth0
-sed -i "s/{{network}}/$net_ip/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth0
-sed -i "s/{{mac-address}}/$net_mac/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth0
+# configure eth0 - management
+cp "$my_dir/ifcfg-ethM" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth0
+sed -i "s/{{network}}/$mgmt_ip/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth0
+sed -i "s/{{mac-address}}/$mgmt_mac/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth0
+# configure eth1 - provisioning
+cp "$my_dir/ifcfg-ethA" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth1
+sed -i "s/{{network}}/$prov_ip/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth1
+sed -i "s/{{mac-address}}/$prov_mac/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth1
+# configure root access
 mkdir -p $tmpdir/root/.ssh
 cp "$my_dir/kp.pub" $tmpdir/root/.ssh/authorized_keys
 echo "PS1='\${debian_chroot:+(\$debian_chroot)}undercloud:\[\033[01;31m\](\$?)\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\\$ '" >> $tmpdir/root/.bashrc

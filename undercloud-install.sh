@@ -1,7 +1,9 @@
-on kvm host:
-1) create stack user, create home directory, add him to libvirtd group
+#!/bin/bash -ex
 
-scp -i kp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B images.tar root@192.168.172.2:/tmp/images.tar
+#on kvm host:
+#1) create stack user, create home directory, add him to libvirtd group
+
+while ! scp -i kp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B images.tar root@192.168.172.2:/tmp/images.tar ; do echo "Waiting for undercloud..." ; sleep 30 ; done
 
 ssh -i kp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@192.168.172.2
 
@@ -27,18 +29,19 @@ sudo yum install -y https://rdoproject.org/repos/openstack-mitaka/rdo-release-mi
 sudo yum install -y python-rdomanager-oscplugin
 cp /usr/share/instack-undercloud/undercloud.conf.sample ~/undercloud.conf
 
---- add to [DEFAULT] of undercloud.conf---
+cat << EOF >> undercloud.conf
+[DEFAULT]
 local_ip = 192.168.176.1/24
 undercloud_public_vip = 192.168.176.10
 undercloud_admin_vip = 192.168.176.11
-local_interface = ens4
+local_interface = eth1
 masquerade_network = 192.168.176.0/24
 dhcp_start = 192.168.176.100
 dhcp_end = 192.168.176.120
 network_cidr = 192.168.176.0/24
 network_gateway = 192.168.176.1
 discovery_iprange = 192.168.176.130,192.168.176.150
-------------------------------------------
+EOF
 
 openstack undercloud install
 
@@ -46,19 +49,20 @@ tar xvf /tmp/images.tar
 cd images
 source ../stackrc
 openstack overcloud image upload
+cd..
 
 
 sid=`neutron subnet-list | awk '/ 192.168.176.0/{print $2}'`
 neutron subnet-update $sid --dns-nameserver 192.168.172.1
 
-exit
+sudo su -
 openstack-config --set /etc/nova/nova.conf DEFAULT rpc_response_timeout 600
 openstack-config --set /etc/ironic/ironic.conf DEFAULT rpc_response_timeout 600
 openstack-service restart nova
 openstack-service restart ironic
-su - stack
+exit
 
-ssh-copy-id -i ~/.ssh/id_rsa.pub stack@192.168.122.1
+ssh -i ~/.ssh/id_rsa stack@192.168.122.1 "echo $(cat ~/.ssh/id_rsa.pub) > .ssh/authorized_keys ; chmod 600 .ssh/authorized_keys"
 for i in {1..2} ; do virsh -c qemu+ssh://stack@192.168.172.1/system domiflist rd-overcloud-0-$i | awk '$3 ~ "prov" {print $5};' ; done > /tmp/nodes.txt
 cat /tmp/nodes.txt
 
@@ -124,7 +128,7 @@ chmod a+x /usr/bin/bootif-fix
 mkdir -p /usr/lib/systemd/system
 cat << EOF > /usr/lib/systemd/system/bootif-fix.service
 [Unit]
-Description=Automated fix for incorrect iPXE BOOFIF
+Description=Automated fix for incorrect iPXE BOOTIF
 [Service]
 Type=simple
 ExecStart=/usr/bin/bootif-fix
@@ -137,19 +141,21 @@ systemctl start bootif-fix
 exit
 
 openstack baremetal introspection bulk start
+#sudo journalctl -l -u openstack-ironic-discoverd -u openstack-ironic-discoverd-dnsmasq -u openstack-ironic-conductor -f
 
-openstack overcloud deploy --templates --control-scale 1 --compute-scale 1 --neutron-tunnel-types vxlan --neutron-network-type vxlan
-
-
-
+# openstack overcloud deploy --templates --control-scale 1 --compute-scale 1 --neutron-tunnel-types vxlan --neutron-network-type vxlan
 
 
-mkdir -p images
-cd images
-export NODE_DIST=centos7
-export USE_DELOREAN_TRUNK=1
-export DELOREAN_REPO_FILE="delorean.repo"
-#export DELOREAN_TRUNK_REPO="http://buildlogs.centos.org/centos/7/cloud/x86_64/rdo-trunk-master-tripleo/"
-export DELOREAN_TRUNK_REPO="http://trunk.rdoproject.org/centos7-mitaka/current/"
-export DIB_INSTALLTYPE_puppet_modules=source
-openstack overcloud image build --all
+
+
+function create_images() {
+  mkdir -p images
+  cd images
+  export NODE_DIST=centos7
+  export USE_DELOREAN_TRUNK=1
+  export DELOREAN_REPO_FILE="delorean.repo"
+  #export DELOREAN_TRUNK_REPO="http://buildlogs.centos.org/centos/7/cloud/x86_64/rdo-trunk-master-tripleo/"
+  export DELOREAN_TRUNK_REPO="http://trunk.rdoproject.org/centos7-mitaka/current/"
+  export DIB_INSTALLTYPE_puppet_modules=source
+  openstack overcloud image build --all
+}
