@@ -111,7 +111,7 @@ python instackenv-validator.py -f instackenv.json
 
 source stackrc
 openstack flavor delete baremetal || /bin/true
-openstack flavor create --id auto --ram 4096 --disk 28 --vcpus 2 baremetal
+openstack flavor create --id auto --ram 8192 --disk 28 --vcpus 2 baremetal
 openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" baremetal
 
 openstack baremetal import --json instackenv.json
