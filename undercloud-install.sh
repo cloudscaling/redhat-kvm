@@ -3,7 +3,7 @@
 #on kvm host:
 #1) create stack user, create home directory, add him to libvirtd group
 
-while ! scp -i kp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B images.tar root@192.168.172.2:/tmp/images.tar ; do echo "Waiting for undercloud..." ; sleep 30 ; done
+while ! scp -i kp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B /home/stack/images.tar root@192.168.172.2:/tmp/images.tar ; do echo "Waiting for undercloud..." ; sleep 30 ; done
 
 ssh -i kp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@192.168.172.2
 
@@ -23,10 +23,9 @@ su - stack
 
 
 sudo yum install -y yum-utils screen
-sudo yum-config-manager --enable rhelosp-rhel-7-server-opt
-sudo yum install -y https://rdoproject.org/repos/openstack-mitaka/rdo-release-mitaka.rpm
-
-sudo yum install -y python-rdomanager-oscplugin
+sudo curl -L -o /etc/yum.repos.d/delorean-mitaka.repo https://trunk.rdoproject.org/centos7-mitaka/current/delorean.repo
+sudo curl -L -o /etc/yum.repos.d/delorean-deps-mitaka.repo http://trunk.rdoproject.org/centos7-mitaka/delorean-deps.repo
+sudo yum -y install yum-plugin-priorities python-tripleoclient python-rdomanager-oscplugin
 cp /usr/share/instack-undercloud/undercloud.conf.sample ~/undercloud.conf
 
 cat << EOF >> undercloud.conf
@@ -45,11 +44,13 @@ EOF
 
 openstack undercloud install
 
+# build images or copy existing
+
 tar xvf /tmp/images.tar
 cd images
 source ../stackrc
 openstack overcloud image upload
-cd..
+cd ..
 
 
 sid=`neutron subnet-list | awk '/ 192.168.176.0/{print $2}'`
@@ -62,7 +63,7 @@ openstack-service restart nova
 openstack-service restart ironic
 exit
 
-ssh -i ~/.ssh/id_rsa stack@192.168.122.1 "echo $(cat ~/.ssh/id_rsa.pub) > .ssh/authorized_keys ; chmod 600 .ssh/authorized_keys"
+ssh -i ~/.ssh/id_rsa stack@192.168.172.1 "echo $(cat ~/.ssh/id_rsa.pub) > .ssh/authorized_keys ; chmod 600 .ssh/authorized_keys"
 for i in {1..2} ; do virsh -c qemu+ssh://stack@192.168.172.1/system domiflist rd-overcloud-0-$i | awk '$3 ~ "prov" {print $5};' ; done > /tmp/nodes.txt
 cat /tmp/nodes.txt
 
@@ -109,42 +110,20 @@ python instackenv-validator.py -f instackenv.json
 
 
 source stackrc
-openstack baremetal import --json instackenv.json
-openstack baremetal list
-openstack baremetal configure boot
-
 openstack flavor delete baremetal || /bin/true
 openstack flavor create --id auto --ram 4096 --disk 28 --vcpus 2 baremetal
 openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" baremetal
 
-sudo su -
-cat << EOF > /usr/bin/bootif-fix
-#!/usr/bin/env bash
-while true;
-  do find /httpboot/ -type f ! -iname "kernel" ! -iname "ramdisk" ! -iname "*.kernel" ! -iname "*.ramdisk" -exec sed -i 's|{mac|{net0/mac|g' {} +;
-done
-EOF
-chmod a+x /usr/bin/bootif-fix
-mkdir -p /usr/lib/systemd/system
-cat << EOF > /usr/lib/systemd/system/bootif-fix.service
-[Unit]
-Description=Automated fix for incorrect iPXE BOOTIF
-[Service]
-Type=simple
-ExecStart=/usr/bin/bootif-fix
-[Install]
-WantedBy=multi-user.target
-EOF
-systemctl daemon-reload
-systemctl enable bootif-fix
-systemctl start bootif-fix
-exit
+openstack baremetal import --json instackenv.json
+openstack baremetal list
+openstack baremetal configure boot
 
 openstack baremetal introspection bulk start
 #sudo journalctl -l -u openstack-ironic-discoverd -u openstack-ironic-discoverd-dnsmasq -u openstack-ironic-conductor -f
 
-# openstack overcloud deploy --templates --control-scale 1 --compute-scale 1 --neutron-tunnel-types vxlan --neutron-network-type vxlan
+openstack overcloud deploy --templates --control-scale 1 --compute-scale 1 --neutron-tunnel-types vxlan --neutron-network-type vxlan
 
+heat resource-list -n 5 overcloud
 
 
 
@@ -156,6 +135,6 @@ function create_images() {
   export DELOREAN_REPO_FILE="delorean.repo"
   #export DELOREAN_TRUNK_REPO="http://buildlogs.centos.org/centos/7/cloud/x86_64/rdo-trunk-master-tripleo/"
   export DELOREAN_TRUNK_REPO="http://trunk.rdoproject.org/centos7-mitaka/current/"
-  export DIB_INSTALLTYPE_puppet_modules=source
+  #export DIB_INSTALLTYPE_puppet_modules=source
   openstack overcloud image build --all
 }

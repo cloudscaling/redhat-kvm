@@ -54,7 +54,8 @@ sed -i "s/{{mac-address}}/$prov_mac/g" $tmpdir/etc/sysconfig/network-scripts/ifc
 mkdir -p $tmpdir/root/.ssh
 cp "$my_dir/kp.pub" $tmpdir/root/.ssh/authorized_keys
 echo "PS1='\${debian_chroot:+(\$debian_chroot)}undercloud:\[\033[01;31m\](\$?)\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\\$ '" >> $tmpdir/root/.bashrc
-sed -i "s root:*: root:$rootpass: " $tmpdir/etc/shadow
+sed -i "s root:\*: root:$rootpass: " $tmpdir/etc/shadow
+sed -i "s root:\!\!: root:$rootpass: " $tmpdir/etc/shadow
 grep root $tmpdir/etc/shadow
 echo "PermitRootLogin yes" > $tmpdir/etc/ssh/sshd_config
 
@@ -66,7 +67,7 @@ sleep 2
 
 net_driver=${net_driver:-e1000}
 virt-install --name=rd-undercloud-$NUM \
-  --ram=5120 \
+  --ram=6144 \
   --vcpus=1,cores=1 \
   --os-type=linux \
   --os-variant=rhel7 \
@@ -74,14 +75,14 @@ virt-install --name=rd-undercloud-$NUM \
   --disk "path=$pool_path/undercloud-$NUM.qcow2",size=40,cache=writeback,bus=virtio,serial=$(uuidgen) \
   --boot hd \
   --noautoconsole \
-  --network network=$mgmt_net,model=$net_driver,mac=$net_mac \
-  --network network=$prov_net,model=$net_driver \
+  --network network=$mgmt_net,model=$net_driver,mac=$mgmt_mac \
+  --network network=$prov_net,model=$net_driver,mac=$prov_mac \
   --network network=$ext_net,model=$net_driver \
   --graphics vnc,listen=0.0.0.0
 
 for i in {1..2} ; do
   virt-install --name rd-overcloud-$NUM-$i \
-    --ram 4096 \
+    --ram 8192 \
     --vcpus 2 \
     --os-variant rhel7 \
     --disk "path=$pool_path/overcloud-$NUM-$i.qcow2,device=disk,bus=virtio,format=qcow2" \
