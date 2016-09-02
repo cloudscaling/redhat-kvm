@@ -19,8 +19,12 @@ net_driver=${net_driver:-e1000}
 
 source "$my_dir/functions"
 
-# cleanup previous domain
-delete_domains
+# check if environment is present
+if virsh list --all | grep -q "rd-undercloud-$NUM" ; then
+  echo 'ERROR: environment present. please clean up first'
+  virsh list --all | grep "cloud-$NUM"
+  exit 1
+fi
 
 # create three networks (i don't know why external is needed)
 create_network management
