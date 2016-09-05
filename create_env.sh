@@ -9,8 +9,12 @@ my_dir="$(dirname $my_file)"
 
 # suffix for deployment
 NUM=0
-# number of overcloud machines
-OCM_COUNT=5
+# number of machines in overcloud
+CONTROLLER_COUNT=1
+COMPUTE_COUNT=1
+STORAGE_COUNT=3
+((OCM_COUNT=CONTROLLER_COUNT+COMPUTE_COUNT+STORAGE_COUNT))
+
 
 # ready image for undercloud - using CentOS cloud image. just run and ssh into it.
 BASE_IMAGE="/var/lib/images/CentOS-7-x86_64-GenericCloud-1607.qcow2"
@@ -40,10 +44,16 @@ ext_net=`get_network_name external`
 # create pool
 virsh pool-info $poolname &> /dev/null || create_pool $poolname
 pool_path=$(get_pool_path $poolname)
-# create root volumes for overcloud machines
-for (( i=1; i<=$OCM_COUNT; i++ )) ; do
-  virsh vol-delete overcloud-$NUM-$i.qcow2 --pool $poolname 2>/dev/null || rm -f $pool_path/overcloud-$NUM-$i.qcow2 2>/dev/null
+# create volumes for overcloud machines
+for (( i=1; i<=CONTROLLER_COUNT+COMPUTE_COUNT; i++ )) ; do
+  delete_volume overcloud-$NUM-$i.qcow2 $poolname
   qemu-img create -f qcow2 -o preallocation=metadata $pool_path/overcloud-$NUM-$i.qcow2 $vm_disk_size
+done
+for (( ; i<=OCM_COUNT; i++ )) ; do
+  delete_volume overcloud-$NUM-$i.qcow2 $poolname
+  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/overcloud-$NUM-$i.qcow2 $vm_disk_size
+  delete_volume overcloud-$NUM-$i-store.qcow2 $poolname
+  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/overcloud-$NUM-$i-store.qcow2 100G
 done
 # copy image for undercloud and resize them
 cp $BASE_IMAGE $pool_path/undercloud-$NUM.qcow2
@@ -118,12 +128,17 @@ virt-install --name=rd-undercloud-$NUM \
   --graphics vnc,listen=0.0.0.0
 
 # just define overcloud machines
-for (( i=1; i<=$OCM_COUNT; i++ )) ; do
+((ns_count=CONTROLLER_COUNT+COMPUTE_COUNT))
+for (( i=1; i<=OCM_COUNT; i++ )) ; do
+  disk_opt="--disk path=$pool_path/overcloud-$NUM-$i.qcow2,device=disk,bus=virtio,format=qcow2 "
+  if (( i > ns_count )) ; then
+    disk_opt="$disk_opt --disk path=$pool_path/overcloud-$NUM-$i-store.qcow2,device=disk,bus=virtio,format=qcow2 "
+  fi
   virt-install --name rd-overcloud-$NUM-$i \
     --ram 8192 \
     --vcpus 2 \
     --os-variant rhel7 \
-    --disk "path=$pool_path/overcloud-$NUM-$i.qcow2,device=disk,bus=virtio,format=qcow2" \
+    $disk_opt \
     --noautoconsole \
     --vnc \
     --network network=$prov_net,model=$net_driver \

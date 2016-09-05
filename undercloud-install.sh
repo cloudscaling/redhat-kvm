@@ -11,3 +11,5 @@ for fff in __undercloud-install-1-as-root.sh __undercloud-install-2-as-stack-use
   scp -i kp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B $fff root@192.168.172.2:/root/$fff
 done
 ssh -t -i kp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@192.168.172.2 /root/__undercloud-install-1-as-root.sh
+
+echo "SSH into undercloud: ssh -t -i kp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@192.168.172.2"
