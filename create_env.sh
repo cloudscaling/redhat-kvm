@@ -9,6 +9,9 @@ my_dir="$(dirname $my_file)"
 
 # suffix for deployment
 NUM=0
+# number of overcloud machines
+OCM_COUNT=5
+
 # ready image for undercloud - using CentOS cloud image. just run and ssh into it.
 BASE_IMAGE="/var/lib/images/CentOS-7-x86_64-GenericCloud-1607.qcow2"
 # disk size for overcloud machines
@@ -38,8 +41,8 @@ ext_net=`get_network_name external`
 virsh pool-info $poolname &> /dev/null || create_pool $poolname
 pool_path=$(get_pool_path $poolname)
 # create root volumes for overcloud machines
-for i in {1..2} ; do
-  virsh vol-delete overcloud-$NUM-$i.qcow2 --pool $poolname || rm -f $pool_path/overcloud-$NUM-$i.qcow2
+for (( i=1; i<=$OCM_COUNT; i++ )) ; do
+  virsh vol-delete overcloud-$NUM-$i.qcow2 --pool $poolname 2>/dev/null || rm -f $pool_path/overcloud-$NUM-$i.qcow2 2>/dev/null
   qemu-img create -f qcow2 -o preallocation=metadata $pool_path/overcloud-$NUM-$i.qcow2 $vm_disk_size
 done
 # copy image for undercloud and resize them
@@ -57,7 +60,7 @@ ssh-keygen -b 2048 -t rsa -f "$my_dir/kp" -q -N ""
 rootpass=`openssl passwd -1 123`
 
 # TODO: use guestfish instead of manual attachment
-# mount undercloud root disk.
+# mount undercloud root disk. (it helps to create multienv)
 # !!! WARNING !!! in case of errors you need to unmount/disconnect it manually!!!
 qemu-nbd -n -c /dev/nbd3 $pool_path/undercloud-$NUM.qcow2
 sleep 5
@@ -65,22 +68,27 @@ tmpdir=$(mktemp -d)
 mount /dev/nbd3p1 $tmpdir
 sleep 2
 
-# configure eth0 - management
-cp "$my_dir/ifcfg-ethM" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth0
-sed -i "s/{{network}}/$mgmt_ip/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth0
-sed -i "s/{{mac-address}}/$mgmt_mac/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth0
-# configure eth1 - provisioning
-cp "$my_dir/ifcfg-ethA" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth1
-sed -i "s/{{network}}/$prov_ip/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth1
-sed -i "s/{{mac-address}}/$prov_mac/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth1
-# configure root access
-mkdir -p $tmpdir/root/.ssh
-cp "$my_dir/kp.pub" $tmpdir/root/.ssh/authorized_keys
-echo "PS1='\${debian_chroot:+(\$debian_chroot)}undercloud:\[\033[01;31m\](\$?)\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\\$ '" >> $tmpdir/root/.bashrc
-sed -i "s root:\*: root:$rootpass: " $tmpdir/etc/shadow
-sed -i "s root:\!\!: root:$rootpass: " $tmpdir/etc/shadow
-grep root $tmpdir/etc/shadow
-echo "PermitRootLogin yes" > $tmpdir/etc/ssh/sshd_config
+function change_undercloud_image() {
+  # configure eth0 - management
+  cp "$my_dir/ifcfg-ethM" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth0
+  sed -i "s/{{network}}/$mgmt_ip/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth0
+  sed -i "s/{{mac-address}}/$mgmt_mac/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth0
+  # configure eth1 - provisioning
+  cp "$my_dir/ifcfg-ethA" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth1
+  sed -i "s/{{network}}/$prov_ip/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth1
+  sed -i "s/{{mac-address}}/$prov_mac/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth1
+  # configure root access
+  mkdir -p $tmpdir/root/.ssh
+  cp "$my_dir/kp.pub" $tmpdir/root/.ssh/authorized_keys
+  echo "PS1='\${debian_chroot:+(\$debian_chroot)}undercloud:\[\033[01;31m\](\$?)\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\\$ '" >> $tmpdir/root/.bashrc
+  sed -i "s root:\*: root:$rootpass: " $tmpdir/etc/shadow
+  sed -i "s root:\!\!: root:$rootpass: " $tmpdir/etc/shadow
+  grep root $tmpdir/etc/shadow
+  echo "PermitRootLogin yes" > $tmpdir/etc/ssh/sshd_config
+}
+
+ret=0
+change_undercloud_image || ret=1
 
 # unmount disk
 umount /dev/nbd3p1
@@ -88,6 +96,11 @@ sleep 2
 rm -rf $tmpdir
 qemu-nbd -d /dev/nbd3
 sleep 2
+
+if [[ $ret != 0 ]] ; then
+  echo "ERROR: there were errors in changing undercloud image"
+  exit 1
+fi
 
 # define and start undercloud machine
 virt-install --name=rd-undercloud-$NUM \
@@ -105,7 +118,7 @@ virt-install --name=rd-undercloud-$NUM \
   --graphics vnc,listen=0.0.0.0
 
 # just define overcloud machines
-for i in {1..2} ; do
+for (( i=1; i<=$OCM_COUNT; i++ )) ; do
   virt-install --name rd-overcloud-$NUM-$i \
     --ram 8192 \
     --vcpus 2 \
