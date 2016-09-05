@@ -29,7 +29,7 @@ yum install -y yum-utils screen mc
 curl -L -o /etc/yum.repos.d/delorean-mitaka.repo https://trunk.rdoproject.org/centos7-mitaka/current/delorean.repo
 curl -L -o /etc/yum.repos.d/delorean-deps-mitaka.repo http://trunk.rdoproject.org/centos7-mitaka/delorean-deps.repo
 # install tripleo clients
-yum -y install yum-plugin-priorities python-tripleoclient python-rdomanager-oscplugin sshpass
+yum -y install yum-plugin-priorities python-tripleoclient python-rdomanager-oscplugin sshpass openstack-utils
 
 # another hack to avoid 'sudo: require tty' error
 #sed -i -e 's/Defaults    requiretty.*/ #Defaults    requiretty/g' /etc/sudoers
