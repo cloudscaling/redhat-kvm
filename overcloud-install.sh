@@ -1,5 +1,7 @@
 #!/bin/bash -ex
 
+# su - stack
+
 # ssh keys are in place - collect MAC addresses of overcloud machines
 for i in {1..5} ; do virsh -c qemu+ssh://stack@192.168.172.1/system domiflist rd-overcloud-0-$i | awk '$3 ~ "prov" {print $5};' ; done > /tmp/nodes.txt
 cat /tmp/nodes.txt
@@ -22,7 +24,7 @@ for i in {1..5} ; do
   elif (( i == 2 )) ; then
     caps="profile:compute,boot_option:local"
   else
-    caps="profile:scaleio-storage,boot_option:local"
+    caps="profile:block-storage,boot_option:local"
   fi
   cat << EOF >> ~/instackenv.json
     {
@@ -33,7 +35,7 @@ for i in {1..5} ; do
         "$(sed -n ${i}p /tmp/nodes.txt)"
       ],
       "cpu": "2",
-      "memory": "4096",
+      "memory": "8192",
       "disk": "30",
       "arch": "x86_64",
       "pm_user": "stack",
@@ -64,8 +66,8 @@ openstack flavor create --id auto --ram 8192 --disk 28 --vcpus 2 control
 openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" --property "capabilities:profile"="control" control
 openstack flavor create --id auto --ram 8192 --disk 28 --vcpus 2 compute
 openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" --property "capabilities:profile"="compute" compute
-openstack flavor create --id auto --ram 8192 --disk 28 --vcpus 2 scaleio-storage
-openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" --property "capabilities:profile"="scaleio-storage" scaleio-storage
+openstack flavor create --id auto --ram 8192 --disk 28 --vcpus 2 block-storage
+openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" --property "capabilities:profile"="block-storage" block-storage
 openstack flavor list --long
 
 # import overcloud configuration

@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 # TODO: next scripts use environment 0 (NUM=0) and install Mitaka version
 
