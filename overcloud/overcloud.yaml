@@ -1,0 +1,43 @@
+heat_template_version: 2016-04-08
+
+description: >
+  Deploy an ScaleIO over OpenStack environment.
+
+parameters:
+
+  ProtectionDomain:
+    type: string
+    value: default
+    description: Name of first protection domain. Next domains will get names like default_2, default_3.
+  ProtectionDomainNodes:
+    type: number
+    value: 100
+    description: >
+        If number of nodes gets lasrgert than this threshould new protection domain will be created.
+        Note, in that case it is needed to add at least 3 new nodes with Storage role to make new domain operationable.
+  StoragePools:
+    type: string
+    value: default
+    label: Storage pools
+    description: >
+        Comma separated list for splitting devices between them.
+        It could be just one element if all devices are belong to the one pool.
+  DevicePaths:
+    type: string
+    value: 
+    description: Comma separated list of devices, e.g. /dev/sdb,/dev/sdc.
+  ProvisioningType:
+    type: string
+    value: thin
+    description: Thin/Thick provisioning for ephemeral and persistent volumes.
+  UseScaleioForGlance:
+    type: boolean
+    value: false
+    description: Glance uses ScaleIO as a backend for images if the option enabled. It uses cinder backend in Glance to store images on ScaleIO.
+  InstallSDSToCompute:
+    type: boolean
+    value: false
+    description: Use compute disks for SDS.
+
+resources:
+

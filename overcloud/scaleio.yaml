@@ -1,0 +1,30 @@
+heat_template_version: 2016-04-08
+
+description: >
+  Extra hostname configuration
+
+parameters:
+  servers:
+    type: json
+  nameserver_ip:
+    type: string
+
+resources:
+  ExtraConfig:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        str_replace:
+          template: |
+            #!/bin/sh
+            echo "nameserver _NAMESERVER_IP_" >> /etc/resolv.conf
+          params:
+            _NAMESERVER_IP_: {get_param: nameserver_ip}
+
+  ExtraDeployments:
+    type: OS::Heat::SoftwareDeployments
+    properties:
+      servers:  {get_param: servers}
+      config: {get_resource: ExtraConfig}
+      actions: ['CREATE','UPDATE']
