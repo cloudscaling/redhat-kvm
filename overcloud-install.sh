@@ -85,7 +85,9 @@ echo "Next step should be an overcloud deploy..."
 exit 0
 
 # deploy overcloud. if you do it manually then I recommend to do it in screen.
-openstack overcloud deploy --templates --control-scale 1 --compute-scale 1 --neutron-tunnel-types vxlan --neutron-network-type vxlan --block-storage-scale 3 -e overcloud/scaleio-env.yaml
+openstack overcloud deploy --templates --control-scale 1 --compute-scale 1 --neutron-tunnel-types vxlan --neutron-network-type vxlan --block-storage-scale 3 \
+  --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
+  -e overcloud/scaleio-env.yaml
 
 # check status of deployment. other heat commands also is useful to check status.
 heat resource-list -n 5 overcloud

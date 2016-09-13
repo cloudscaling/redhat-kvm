@@ -50,6 +50,14 @@ cd ..
 sid=`neutron subnet-list | awk '/ 192.168.176.0/{print $2}'`
 neutron subnet-update $sid --dns-nameserver 192.168.172.1
 
+mkdir .ssh
+cat <<EOF >.ssh/config
+Host *
+StrictHostKeyChecking no
+UserKnownHostsFile=/dev/null
+EOF
+chmod 644 .ssh/config
+
 # copy ssh key from undercloud machine to KVM host. it needs to allow control of host VM's from undercloud's ironic service
 # TODO: this command needs to input password - rework it to batch mode
 sshpass -p password ssh -i ~/.ssh/id_rsa stack@192.168.172.1 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "echo $(cat ~/.ssh/id_rsa.pub) > .ssh/authorized_keys ; chmod 600 .ssh/authorized_keys"
