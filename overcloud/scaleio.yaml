@@ -1,7 +1,7 @@
 heat_template_version: 2016-04-08
 
 description: >
-  Extra hostname configuration
+  Extra ScaleIO configuration
 
 parameters:
   servers:
@@ -14,34 +14,25 @@ parameters:
     default: {}
 
 resources:
-  ExtraConfigScript:
-    type: OS::Heat::SoftwareConfig
-    properties:
-      group: script
-      inputs:
-      - name: step
-      config: |
-        #!/bin/sh
-        echo "$step" >> /var/log/scaleio-1.log
-        echo "$(hostname)" >> /var/log/scaleio-1.log
 
   ExtraConfigFile:
     type: OS::Heat::SoftwareConfig
     properties:
       group: script
       inputs:
-      - name: step
+      - name: file
       config:
-        get_file: scaleio.sh
+        get_file: {get_param: file}
 
   ScaleIODeployment_Step01:
     type: OS::Heat::SoftwareDeployments
+    depends_on: ScaleIODeploymentData
     properties:
       name: ScaleIODeployment_Step01
       servers:  {get_param: servers}
-      config: {get_resource: ExtraConfigScript}
+      config: {get_resource: ExtraConfigFile}
       input_values:
-        step: 1
+        file: 01_prepare_repo.sh
         update_identifier: {get_param: DeployIdentifier}
 
   ScaleIODeployment_Step02:
@@ -52,11 +43,12 @@ resources:
       servers:  {get_param: servers}
       config: {get_resource: ExtraConfigFile}
       input_values:
-        step: 2
+        file: 02_install_puppets.sh
         update_identifier: {get_param: DeployIdentifier}
+
 
   # Note, this should come last, so use depends_on to ensure
   # this is created after any other resources.
   ExtraDeployments:
     type: OS::Heat::None
-    depends_on: ScaleIODeployment_Step01
+    depends_on: ScaleIODeployment_Step02

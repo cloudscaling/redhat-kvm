@@ -1,5 +1,5 @@
 resource_registry:
-  OS::ScaleIO::OverCloud: overcloud.yaml
+  OS::ScaleIO::ScaleIODeploymentData: scaleio_data.yaml
   OS::TripleO::NodeExtraConfigPost: scaleio.yaml
 
 parameter_defaults:
@@ -8,5 +8,7 @@ parameter_defaults:
   CinderEnableRbdBackend: false
   CinderEnableNfsBackend: false
   NovaEnableRbdBackend: false
-  ## Glance backend can be either 'rbd' (Ceph), 'swift' or 'file'.
   GlanceBackend: file
+
+  UsePuppetsFromUpstream: true
+  PackagesSourceURL: http://scaleio-packages.s3-website-us-east-1.amazonaws.com/redhat/

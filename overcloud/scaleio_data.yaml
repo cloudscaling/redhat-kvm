@@ -1,9 +1,19 @@
 heat_template_version: 2016-04-08
 
 description: >
-  Deploy an ScaleIO over OpenStack environment.
+  Parameters for deploying an ScaleIO over OpenStack environment.
 
 parameters:
+
+  UsePuppetsFromUpstream:
+    type: boolean
+    value: false
+    description: Use puppet modules from upstream instead of puppet forge.
+  PackagesSourceURL:
+    type: string
+    value: 
+    description: Where to get packages of ScaleIO for installation.
+
 
   ProtectionDomain:
     type: string
@@ -40,4 +50,14 @@ parameters:
     description: Use compute disks for SDS.
 
 resources:
+  ScaleIODeploymentData:
+    type: OS::Heat::None
 
+outputs:
+  role_data:
+    description: Role data for the ScaleIO services.
+    value:
+      service_name: scaleio
+      config_settings:
+        scaleio::use_puppets_from_upstream: {get_param: UsePuppetsFromUpstream}
+        scaleio::packages_source_url: {get_param: PackagesSourceURL}
