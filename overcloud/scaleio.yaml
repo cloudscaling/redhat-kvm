@@ -6,26 +6,57 @@ description: >
 parameters:
   servers:
     type: json
+  DeployIdentifier:
+     type: string
+     description: Value which changes if the node configuration may need to be re-applied
+  RoleData:
+    type: json
+    default: {}
 
 resources:
-  ExtraConfig:
+  ExtraConfigScript:
     type: OS::Heat::SoftwareConfig
     properties:
       group: script
-#      inputs:
-#      - name: foo
-#      - name: bar
-#      outputs:
-#      - name: result
+      inputs:
+      - name: step
       config: |
         #!/bin/sh
-        echo "$(hostname)" >> /var/log/scaleio.log
+        echo "$step" >> /var/log/scaleio-1.log
+        echo "$(hostname)" >> /var/log/scaleio-1.log
 
-  ExtraDeployments:
-    type: OS::Heat::SoftwareDeployments
+  ExtraConfigFile:
+    type: OS::Heat::SoftwareConfig
     properties:
+      group: script
+      inputs:
+      - name: step
+      config:
+        get_file: scaleio.sh
+
+  ScaleIODeployment_Step01:
+    type: OS::Heat::SoftwareDeployment
+    properties:
+      name: ScaleIODeployment_Step01
       servers:  {get_param: servers}
-      config: {get_resource: ExtraConfig}
-#      actions: ['CREATE','UPDATE']
-#      input_values:
-#        foo: fooooo
+      config: {get_resource: ExtraConfigScript}
+      input_values:
+        step: 1
+        update_identifier: {get_param: DeployIdentifier}
+
+  ScaleIODeployment_Step02:
+    type: OS::Heat::SoftwareDeployment
+    depends_on: ScaleIODeployment_Step01
+    properties:
+      name: ScaleIODeployment_Step02
+      servers:  {get_param: servers}
+      config: {get_resource: ExtraConfigFile}
+      input_values:
+        step: 2
+        update_identifier: {get_param: DeployIdentifier}
+
+  # Note, this should come last, so use depends_on to ensure
+  # this is created after any other resources.
+  ExtraDeployments:
+    type: OS::Heat::None
+    depends_on: ScaleIODeployment_Step01
