@@ -35,7 +35,7 @@ resources:
         get_file: scaleio.sh
 
   ScaleIODeployment_Step01:
-    type: OS::Heat::SoftwareDeployment
+    type: OS::Heat::SoftwareDeployments
     properties:
       name: ScaleIODeployment_Step01
       servers:  {get_param: servers}
@@ -45,7 +45,7 @@ resources:
         update_identifier: {get_param: DeployIdentifier}
 
   ScaleIODeployment_Step02:
-    type: OS::Heat::SoftwareDeployment
+    type: OS::Heat::SoftwareDeployments
     depends_on: ScaleIODeployment_Step01
     properties:
       name: ScaleIODeployment_Step02
