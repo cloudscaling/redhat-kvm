@@ -67,7 +67,6 @@ resources:
 
   ScaleIODeploymentData:
     type: OS::Heat::SoftwareDeployments
-    depends_on: ScaleIODeploymentData
     properties:
       servers:  {get_param: servers}
       config: {get_resource: ScaleIOConfigData}

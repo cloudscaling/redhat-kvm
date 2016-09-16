@@ -12,8 +12,10 @@ parameters:
 
 resources:
 
-  ScaleIODeploymentData:
+  ScaleIOPrepareConfig:
     type: OS::ScaleIO::ScaleIODeploymentData
+    properties:
+      servers:  {get_param: servers}
 
   ExtraConfigFile1:
     type: OS::Heat::SoftwareConfig
@@ -23,7 +25,7 @@ resources:
         get_file: 01_prepare_repo.sh
   ScaleIODeployment_Step01:
     type: OS::Heat::SoftwareDeployments
-    depends_on: ScaleIODeploymentData
+    depends_on: ScaleIOPrepareConfig
     properties:
       name: ScaleIODeployment_Step01
       servers:  {get_param: servers}
