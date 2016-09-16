@@ -7,44 +7,51 @@ parameters:
   servers:
     type: json
   DeployIdentifier:
-     type: string
-     description: Value which changes if the node configuration may need to be re-applied
-  RoleData:
-    type: json
-    default: {}
+    type: string
+    description: Value which changes if the node configuration may need to be re-applied
 
 resources:
 
-  ExtraConfigFile:
+  ScaleIODeploymentData:
+    type: OS::ScaleIO::ScaleIODeploymentData
+
+  ExtraConfigFile1:
     type: OS::Heat::SoftwareConfig
     properties:
       group: script
-      inputs:
-      - name: file
       config:
-        get_file: {get_param: file}
-
+        get_file: 01_prepare_repo.sh
   ScaleIODeployment_Step01:
     type: OS::Heat::SoftwareDeployments
     depends_on: ScaleIODeploymentData
     properties:
       name: ScaleIODeployment_Step01
       servers:  {get_param: servers}
-      config: {get_resource: ExtraConfigFile}
+      config: {get_resource: ExtraConfigFile1}
       input_values:
-        file: 01_prepare_repo.sh
         update_identifier: {get_param: DeployIdentifier}
 
+  ExtraConfigFile2:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        get_file: 02_install_puppets.sh
   ScaleIODeployment_Step02:
     type: OS::Heat::SoftwareDeployments
     depends_on: ScaleIODeployment_Step01
     properties:
       name: ScaleIODeployment_Step02
       servers:  {get_param: servers}
-      config: {get_resource: ExtraConfigFile}
+      config: {get_resource: ExtraConfigFile2}
       input_values:
-        file: 02_install_puppets.sh
         update_identifier: {get_param: DeployIdentifier}
+
+
+  # 03. run puppet with install for all modules on all nodes
+  # 04. create cluster, add other MDM-s, add SDS-s
+  #     configure GW, configure cluster
+  # 05. configure SDC, configure OpenStack services
 
 
   # Note, this should come last, so use depends_on to ensure

@@ -5,59 +5,72 @@ description: >
 
 parameters:
 
+  servers:
+    type: json
+
   UsePuppetsFromUpstream:
     type: boolean
-    value: false
+    default: false
     description: Use puppet modules from upstream instead of puppet forge.
   PackagesSourceURL:
     type: string
-    value: 
     description: Where to get packages of ScaleIO for installation.
 
 
   ProtectionDomain:
     type: string
-    value: default
+    default: default
     description: Name of first protection domain. Next domains will get names like default_2, default_3.
   ProtectionDomainNodes:
     type: number
-    value: 100
+    default: 100
     description: >
         If number of nodes gets lasrgert than this threshould new protection domain will be created.
         Note, in that case it is needed to add at least 3 new nodes with Storage role to make new domain operationable.
   StoragePools:
     type: string
-    value: default
+    default: default
     label: Storage pools
     description: >
         Comma separated list for splitting devices between them.
         It could be just one element if all devices are belong to the one pool.
   DevicePaths:
     type: string
-    value: 
     description: Comma separated list of devices, e.g. /dev/sdb,/dev/sdc.
   ProvisioningType:
     type: string
-    value: thin
+    default: thin
     description: Thin/Thick provisioning for ephemeral and persistent volumes.
   UseScaleioForGlance:
     type: boolean
-    value: false
+    default: false
     description: Glance uses ScaleIO as a backend for images if the option enabled. It uses cinder backend in Glance to store images on ScaleIO.
   InstallSDSToCompute:
     type: boolean
-    value: false
+    default: false
     description: Use compute disks for SDS.
 
 resources:
-  ScaleIODeploymentData:
-    type: OS::Heat::None
+  ScaleIOConfigData:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      inputs:
+      - name: UsePuppetsFromUpstream
+      - name: PackagesSourceURL
+      config: |
+        #!/bin/bash -e
+        FILE='/etc/scaleio.env'
+        rm -f $FILE
+        echo "UsePuppetsFromUpstream='$UsePuppetsFromUpstream'" >> $FILE
+        echo "PackagesSourceURL='$PackagesSourceURL'" >> $FILE
 
-outputs:
-  role_data:
-    description: Role data for the ScaleIO services.
-    value:
-      service_name: scaleio
-      config_settings:
-        scaleio::use_puppets_from_upstream: {get_param: UsePuppetsFromUpstream}
-        scaleio::packages_source_url: {get_param: PackagesSourceURL}
+  ScaleIODeploymentData:
+    type: OS::Heat::SoftwareDeployments
+    depends_on: ScaleIODeploymentData
+    properties:
+      servers:  {get_param: servers}
+      config: {get_resource: ScaleIOConfigData}
+      input_values:
+        UsePuppetsFromUpstream: {get_param: UsePuppetsFromUpstream}
+        PackagesSourceURL: {get_param: PackagesSourceURL}
