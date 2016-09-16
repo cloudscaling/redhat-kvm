@@ -50,7 +50,7 @@ cd ..
 sid=`neutron subnet-list | awk '/ 192.168.176.0/{print $2}'`
 neutron subnet-update $sid --dns-nameserver 192.168.172.1
 
-mkdir .ssh
+mkdir -p .ssh
 cat <<EOF >.ssh/config
 Host *
 StrictHostKeyChecking no
