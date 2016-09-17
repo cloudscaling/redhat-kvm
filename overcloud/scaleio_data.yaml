@@ -15,6 +15,20 @@ parameters:
   PackagesSourceURL:
     type: string
     description: Where to get packages of ScaleIO for installation.
+  ScaleIODriverFTP:
+    type: string
+    default: "ftp://QNzgdxXix:Aw3wFAwAq3@ftp.emc.com"
+    description: |
+      URL for driver_sync.sh script from sdc/xcache packages to sync & verify driver.
+
+  InstallSDSToCompute:
+    type: boolean
+    default: false
+    description: Use compute disks for SDS.
+  GatewayPort:
+    type: int
+    default: 4443
+    description: Port where gateway will listen.
 
 
   ProtectionDomain:
@@ -45,10 +59,6 @@ parameters:
     type: boolean
     default: false
     description: Glance uses ScaleIO as a backend for images if the option enabled. It uses cinder backend in Glance to store images on ScaleIO.
-  InstallSDSToCompute:
-    type: boolean
-    default: false
-    description: Use compute disks for SDS.
 
 resources:
   ScaleIOConfigData:
@@ -58,12 +68,18 @@ resources:
       inputs:
       - name: UsePuppetsFromUpstream
       - name: PackagesSourceURL
+      - name: ScaleIODriverFTP
+      - name: InstallSDSToCompute
+      - name: GatewayPort
       config: |
         #!/bin/bash -e
         FILE='/etc/scaleio.env'
         rm -f $FILE
-        echo "UsePuppetsFromUpstream='$UsePuppetsFromUpstream'" >> $FILE
-        echo "PackagesSourceURL='$PackagesSourceURL'" >> $FILE
+        echo "export UsePuppetsFromUpstream='$UsePuppetsFromUpstream'" >> $FILE
+        echo "export PackagesSourceURL='$PackagesSourceURL'" >> $FILE
+        echo "export ScaleIODriverFTP='$ScaleIODriverFTP'" >> $FILE
+        echo "export InstallSDSToCompute='$InstallSDSToCompute'" >> $FILE
+        echo "export GatewayPort='$GatewayPort'" >> $FILE
 
   ScaleIODeploymentData:
     type: OS::Heat::SoftwareDeployments
@@ -73,3 +89,6 @@ resources:
       input_values:
         UsePuppetsFromUpstream: {get_param: UsePuppetsFromUpstream}
         PackagesSourceURL: {get_param: PackagesSourceURL}
+        ScaleIODriverFTP: {get_param: ScaleIODriverFTP}
+        InstallSDSToCompute: {get_param: InstallSDSToCompute}
+        GatewayPort: {get_param: GatewayPort}

@@ -38,7 +38,7 @@ resources:
     properties:
       group: script
       config:
-        get_file: 02_install_puppets.sh
+        get_file: 02_install_packages.sh
   ScaleIODeployment_Step02:
     type: OS::Heat::SoftwareDeployments
     depends_on: ScaleIODeployment_Step01
@@ -49,8 +49,6 @@ resources:
       input_values:
         update_identifier: {get_param: DeployIdentifier}
 
-
-  # 03. run puppet with install for all modules on all nodes
   # 04. create cluster, add other MDM-s, add SDS-s
   #     configure GW, configure cluster
   # 05. configure SDC, configure OpenStack services
