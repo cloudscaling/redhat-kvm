@@ -26,7 +26,7 @@ parameters:
     default: false
     description: Use compute disks for SDS.
   GatewayPort:
-    type: int
+    type: number
     default: 4443
     description: Port where gateway will listen.
 
