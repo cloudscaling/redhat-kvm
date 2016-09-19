@@ -1,10 +1,30 @@
 #!/bin/bash -ex
 
+# common setting from create_env.sh
+# TODO: move them outside
+NUM=0
+
 # su - stack
 
-# ssh keys are in place - collect MAC addresses of overcloud machines
-for i in {1..5} ; do virsh -c qemu+ssh://stack@192.168.172.1/system domiflist rd-overcloud-0-$i | awk '$3 ~ "prov" {print $5};' ; done > /tmp/nodes.txt
-cat /tmp/nodes.txt
+((addr=172+NUM*10))
+
+CONTROLLER_COUNT=$(virsh -c qemu+ssh://stack@192.168.$addr.1/system list --all | grep rd-overcloud-$NUM-cont | wc -l)
+COMPUTE_COUNT=$(virsh -c qemu+ssh://stack@192.168.$addr.1/system list --all | grep rd-overcloud-$NUM-comp | wc -l)
+STORAGE_COUNT=$(virsh -c qemu+ssh://stack@192.168.$addr.1/system list --all | grep rd-overcloud-$NUM-stor | wc -l)
+((OCM_COUNT=CONTROLLER_COUNT+COMPUTE_COUNT+STORAGE_COUNT))
+
+# collect MAC addresses of overcloud machines
+function get_macs() {
+  type=$1
+  count=$2
+  truncate -s /tmp/nodes-$type.txt
+  for (( i=1; i<=count; i++ )) ; do virsh -c qemu+ssh://stack@192.168.$addr.1/system domiflist rd-overcloud-$NUM-$type-$i | awk '$3 ~ "prov" {print $5};' ; done > /tmp/nodes-$type.txt
+  cat /tmp/nodes-$type.txt
+}
+
+get_macs cont $CONTROLLER_COUNT
+get_macs comp $COMPUTE_COUNT
+get_macs stor $STORAGE_COUNT
 
 id_rsa=$(awk 1 ORS='\\n' ~/.ssh/id_rsa)
 # create overcloud machines definition
@@ -12,45 +32,52 @@ cat << EOF > ~/instackenv.json
 {
   "ssh-user": "stack",
   "ssh-key": "$id_rsa",
+  "host-ip": "192.168.$addr.1",
   "power_manager": "nova.virt.baremetal.virtual_power_driver.VirtualPowerManager",
-  "host-ip": "192.168.122.1",
   "arch": "x86_64",
   "nodes": [
 EOF
 
-for i in {1..5} ; do
-  if (( i == 1 )) ; then
-    caps="profile:control,boot_option:local"
-  elif (( i == 2 )) ; then
-    caps="profile:compute,boot_option:local"
-  else
-    caps="profile:block-storage,boot_option:local"
-  fi
+function define_machine() {
+  caps=$1
+  mac=$2
   cat << EOF >> ~/instackenv.json
     {
-      "pm_addr": "192.168.172.1",
+      "pm_addr": "192.168.$addr.1",
+      "pm_user": "stack",
       "pm_password": "$id_rsa",
       "pm_type": "pxe_ssh",
       "mac": [
-        "$(sed -n ${i}p /tmp/nodes.txt)"
+        "$mac"
       ],
       "cpu": "2",
       "memory": "8192",
       "disk": "30",
       "arch": "x86_64",
-      "pm_user": "stack",
       "capabilities": "$caps"
+    },
 EOF
-  if (( i != 5 )) ; then
-    echo "    }," >> ~/instackenv.json
-  else
-    echo "    }" >> ~/instackenv.json
-  fi
-done
-cat << EOF >> ~/instackenv.json
-  ]
 }
-EOF
+
+for (( i=1; i<=CONTROLLER_COUNT; i++ )) ; do
+  mac=$(sed -n ${i}p /tmp/nodes-cont.txt)
+  define_machine "profile:control,boot_option:local" $mac
+done
+for (( i=1; i<=COMPUTE_COUNT; i++ )) ; do
+  mac=$(sed -n ${i}p /tmp/nodes-comp.txt)
+  define_machine "profile:compute,boot_option:local" $mac
+done
+for (( i=1; i<=STORAGE_COUNT; i++ )) ; do
+  mac=$(sed -n ${i}p /tmp/nodes-stor.txt)
+  define_machine "profile:block-storage,boot_option:local" $mac
+done
+
+# remove last comma
+head -n -1 ~/instackenv.json > ~/instackenv.json.tmp
+mv ~/instackenv.json.tmp ~/instackenv.json
+echo "    }," >> ~/instackenv.json
+echo "  ]" >> ~/instackenv.json
+
 # check this json (it's optional)
 curl -O https://raw.githubusercontent.com/rthallisey/clapper/master/instackenv-validator.py
 python instackenv-validator.py -f instackenv.json
@@ -82,12 +109,12 @@ openstack baremetal introspection bulk start
 #sudo journalctl -l -u openstack-ironic-discoverd -u openstack-ironic-discoverd-dnsmasq -u openstack-ironic-conductor -f
 
 echo "Next step should be an overcloud deploy..."
-exit 0
 
 # deploy overcloud. if you do it manually then I recommend to do it in screen.
-openstack overcloud deploy --templates --control-scale 1 --compute-scale 1 --neutron-tunnel-types vxlan --neutron-network-type vxlan --block-storage-scale 3 \
+echo "openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-network-type vxlan \
+  --control-scale $CONTROLLER_COUNT --compute-scale $COMPUTE_COUNT --block-storage-scale $STORAGE_COUNT \
   --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
-  -e overcloud/scaleio-env.yaml
+  -e overcloud/scaleio-env.yaml"
 
 # check status of deployment. other heat commands also is useful to check status.
-heat resource-list -n 5 overcloud
+# heat resource-list -n 5 overcloud
