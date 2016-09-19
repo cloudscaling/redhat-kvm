@@ -1,9 +1,5 @@
 #!/bin/bash -ex
 
-# common setting from create_env.sh
-# TODO: move them outside
-NUM=0
-
 # this script file should be copied to undercloud machine and run there.
 
 cd ~

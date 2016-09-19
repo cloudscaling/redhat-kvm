@@ -1,10 +1,14 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 # common setting from create_env.sh
-# TODO: move them outside
-NUM=0
+NUM=${NUM:-0}
 
 # su - stack
+
+if [[ "$(whoami)" != "stack" ]] ; then
+  echo "This script must be run under the 'stack' user"
+  exit 1
+fi
 
 ((addr=172+NUM*10))
 
@@ -17,8 +21,9 @@ STORAGE_COUNT=$(virsh -c qemu+ssh://stack@192.168.$addr.1/system list --all | gr
 function get_macs() {
   type=$1
   count=$2
-  truncate -s /tmp/nodes-$type.txt
+  truncate -s 0 /tmp/nodes-$type.txt
   for (( i=1; i<=count; i++ )) ; do virsh -c qemu+ssh://stack@192.168.$addr.1/system domiflist rd-overcloud-$NUM-$type-$i | awk '$3 ~ "prov" {print $5};' ; done > /tmp/nodes-$type.txt
+  echo "macs for '$type':"
   cat /tmp/nodes-$type.txt
 }
 
@@ -75,11 +80,14 @@ done
 # remove last comma
 head -n -1 ~/instackenv.json > ~/instackenv.json.tmp
 mv ~/instackenv.json.tmp ~/instackenv.json
-echo "    }," >> ~/instackenv.json
-echo "  ]" >> ~/instackenv.json
+cat << EOF >> ~/instackenv.json
+    }
+  ]
+}
+EOF
 
 # check this json (it's optional)
-curl -O https://raw.githubusercontent.com/rthallisey/clapper/master/instackenv-validator.py
+curl --silent -O https://raw.githubusercontent.com/rthallisey/clapper/master/instackenv-validator.py
 python instackenv-validator.py -f instackenv.json
 
 source ./stackrc
@@ -108,10 +116,11 @@ openstack baremetal introspection bulk start
 # this is a recommended command to check and wait end of introspection. but previous command can wait itself.
 #sudo journalctl -l -u openstack-ironic-discoverd -u openstack-ironic-discoverd-dnsmasq -u openstack-ironic-conductor -f
 
+tar xvf oc.tar
 echo "Next step should be an overcloud deploy..."
 
 # deploy overcloud. if you do it manually then I recommend to do it in screen.
-echo "openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-network-type vxlan \
+echo "openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-network-type vxlan --ntp-server pool.ntp.org \
   --control-scale $CONTROLLER_COUNT --compute-scale $COMPUTE_COUNT --block-storage-scale $STORAGE_COUNT \
   --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
   -e overcloud/scaleio-env.yaml"

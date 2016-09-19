@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 # this script file should be copied to undercloud machine and run there.
 
@@ -36,7 +36,7 @@ yum -y install yum-plugin-priorities python-tripleoclient python-rdomanager-oscp
 
 cp "$my_dir/__undercloud-install-2-as-stack-user.sh" /home/stack/
 chown stack /home/stack/__undercloud-install-2-as-stack-user.sh
-sudo -u stack /home/stack/__undercloud-install-2-as-stack-user.sh
+sudo -u stack NUM=$NUM /home/stack/__undercloud-install-2-as-stack-user.sh
 
 # increase timeouts due to virtual installation
 openstack-config --set /etc/nova/nova.conf DEFAULT rpc_response_timeout 600

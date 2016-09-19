@@ -1,19 +1,14 @@
 #!/bin/bash -e
 
-my_file="$(readlink -e "$0")"
-my_dir="$(dirname $my_file)"
-
-# instructions was used:
-#  https://keithtenzer.com/2015/10/14/howto-openstack-deployment-using-tripleo-and-the-red-hat-openstack-director/
-#  http://docs.openstack.org/developer/tripleo-docs/index.html
-
 # suffix for deployment
-NUM=0
+NUM=${NUM:-0}
 # number of machines in overcloud
 CONTROLLER_COUNT=3
 COMPUTE_COUNT=1
 STORAGE_COUNT=3
 
+my_file="$(readlink -e "$0")"
+my_dir="$(dirname $my_file)"
 
 # ready image for undercloud - using CentOS cloud image. just run and ssh into it.
 BASE_IMAGE="/var/lib/images/CentOS-7-x86_64-GenericCloud-1607.qcow2"
