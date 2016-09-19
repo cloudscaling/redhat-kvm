@@ -1,23 +1,32 @@
 #!/bin/bash -ex
 
+# common setting from create_env.sh
+# TODO: move them outside
+NUM=0
+
 # this script file should be copied to undercloud machine and run there.
 
 cd ~
+
+((addr=176+NUM*10))
+prov_ip="192.168.$addr"
+((addr=172+NUM*10))
+mgmt_ip="192.168.$addr"
 
 # create undercloud configuration file. all IP addresses are relevant to create_env.sh script
 cp /usr/share/instack-undercloud/undercloud.conf.sample ~/undercloud.conf
 cat << EOF >> undercloud.conf
 [DEFAULT]
-local_ip = 192.168.176.1/24
-undercloud_public_vip = 192.168.176.10
-undercloud_admin_vip = 192.168.176.11
+local_ip = $prov_ip.1/24
+undercloud_public_vip = $prov_ip.10
+undercloud_admin_vip = $prov_ip.11
 local_interface = eth1
-masquerade_network = 192.168.176.0/24
-dhcp_start = 192.168.176.100
-dhcp_end = 192.168.176.120
-network_cidr = 192.168.176.0/24
-network_gateway = 192.168.176.1
-discovery_iprange = 192.168.176.130,192.168.176.150
+masquerade_network = $prov_ip.0/24
+dhcp_start = $prov_ip.100
+dhcp_end = $prov_ip.120
+network_cidr = $prov_ip.0/24
+network_gateway = $prov_ip.1
+discovery_iprange = $prov_ip.130,$prov_ip.150
 EOF
 
 # install undercloud
@@ -47,8 +56,8 @@ openstack overcloud image upload
 cd ..
 
 # update undercloud's network information
-sid=`neutron subnet-list | awk '/ 192.168.176.0/{print $2}'`
-neutron subnet-update $sid --dns-nameserver 192.168.172.1
+sid=`neutron subnet-list | grep " $prov_ip.0" | awk '{print $2}'`
+neutron subnet-update $sid --dns-nameserver $mgmt_ip.1
 
 mkdir -p .ssh
 cat <<EOF >.ssh/config
@@ -60,4 +69,4 @@ chmod 644 .ssh/config
 
 # copy ssh key from undercloud machine to KVM host. it needs to allow control of host VM's from undercloud's ironic service
 # TODO: this command needs to input password - rework it to batch mode
-sshpass -p password ssh -i ~/.ssh/id_rsa stack@192.168.172.1 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "echo $(cat ~/.ssh/id_rsa.pub) > .ssh/authorized_keys ; chmod 600 .ssh/authorized_keys"
+sshpass -p password ssh -i ~/.ssh/id_rsa stack@${mgmt_ip}.1 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "echo $(cat ~/.ssh/id_rsa.pub) > .ssh/authorized_keys ; chmod 600 .ssh/authorized_keys"
