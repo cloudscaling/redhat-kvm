@@ -10,10 +10,9 @@ my_dir="$(dirname $my_file)"
 # suffix for deployment
 NUM=0
 # number of machines in overcloud
-CONTROLLER_COUNT=1
+CONTROLLER_COUNT=3
 COMPUTE_COUNT=1
 STORAGE_COUNT=3
-((OCM_COUNT=CONTROLLER_COUNT+COMPUTE_COUNT+STORAGE_COUNT))
 
 
 # ready image for undercloud - using CentOS cloud image. just run and ssh into it.
@@ -45,15 +44,22 @@ ext_net=`get_network_name external`
 virsh pool-info $poolname &> /dev/null || create_pool $poolname
 pool_path=$(get_pool_path $poolname)
 # create volumes for overcloud machines
-for (( i=1; i<=CONTROLLER_COUNT+COMPUTE_COUNT; i++ )) ; do
-  delete_volume overcloud-$NUM-$i.qcow2 $poolname
-  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/overcloud-$NUM-$i.qcow2 $vm_disk_size
+for (( i=1; i<=CONTROLLER_COUNT; i++ )) ; do
+  name="overcloud-$NUM-cont-$i"
+  delete_volume $name.qcow2 $poolname
+  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/$name.qcow2 $vm_disk_size
 done
-for (( ; i<=OCM_COUNT; i++ )) ; do
-  delete_volume overcloud-$NUM-$i.qcow2 $poolname
-  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/overcloud-$NUM-$i.qcow2 $vm_disk_size
-  delete_volume overcloud-$NUM-$i-store.qcow2 $poolname
-  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/overcloud-$NUM-$i-store.qcow2 100G
+for (( i=1; i<=COMPUTE_COUNT; i++ )) ; do
+  name="overcloud-$NUM-comp-$i"
+  delete_volume $name.qcow2 $poolname
+  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/$name.qcow2 $vm_disk_size
+done
+for (( i=1 ; i<=STORAGE_COUNT; i++ )) ; do
+  name="overcloud-$NUM-stor-$i"
+  delete_volume $name.qcow2 $poolname
+  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/$name.qcow2 $vm_disk_size
+  delete_volume $name-store.qcow2 $poolname
+  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/$name-store.qcow2 100G
 done
 # copy image for undercloud and resize them
 cp $BASE_IMAGE $pool_path/undercloud-$NUM.qcow2
@@ -127,14 +133,11 @@ virt-install --name=rd-undercloud-$NUM \
   --network network=$ext_net,model=$net_driver \
   --graphics vnc,listen=0.0.0.0
 
-# just define overcloud machines
-((ns_count=CONTROLLER_COUNT+COMPUTE_COUNT))
-for (( i=1; i<=OCM_COUNT; i++ )) ; do
-  disk_opt="--disk path=$pool_path/overcloud-$NUM-$i.qcow2,device=disk,bus=virtio,format=qcow2 "
-  if (( i > ns_count )) ; then
-    disk_opt="$disk_opt --disk path=$pool_path/overcloud-$NUM-$i-store.qcow2,device=disk,bus=virtio,format=qcow2 "
-  fi
-  virt-install --name rd-overcloud-$NUM-$i \
+function define-machine() {
+  name="$1"
+  shift
+  disk_opt="$@"
+  virt-install --name $name \
     --ram 8192 \
     --vcpus 2 \
     --os-variant rhel7 \
@@ -144,8 +147,22 @@ for (( i=1; i<=OCM_COUNT; i++ )) ; do
     --network network=$prov_net,model=$net_driver \
     --network network=$ext_net,model=$net_driver \
     --cpu SandyBridge,+vmx \
-    --dry-run --print-xml > /tmp/oc-$NUM-$i.xml
-  virsh define --file /tmp/oc-$NUM-$i.xml
+    --dry-run --print-xml > /tmp/oc-$name.xml
+  virsh define --file /tmp/oc-$name.xml
+}
+
+# just define overcloud machines
+for (( i=1; i<=CONTROLLER_COUNT; i++ )) ; do
+  name="overcloud-$NUM-cont-$i"
+  define-machine rd-$name "--disk path=$pool_path/$name.qcow2,device=disk,bus=virtio,format=qcow2"
+done
+for (( i=1; i<=COMPUTE_COUNT; i++ )) ; do
+  name="overcloud-$NUM-comp-$i"
+  define-machine rd-$name "--disk path=$pool_path/$name.qcow2,device=disk,bus=virtio,format=qcow2"
+done
+for (( i=1; i<=STORAGE_COUNT; i++ )) ; do
+  name="overcloud-$NUM-stor-$i"
+  define-machine rd-$name "--disk path=$pool_path/$name.qcow2,device=disk,bus=virtio,format=qcow2 --disk path=$pool_path/$name-store.qcow2,device=disk,bus=virtio,format=qcow2"
 done
 
 # TODO: add timeout here

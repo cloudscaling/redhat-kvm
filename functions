@@ -92,7 +92,7 @@ function get_pool_path() {
 }
 
 function delete_domains() {
-  for name in `virsh list --all | grep "rd-overcloud-$NUM" | awk '{print $2}'` ; do
+  for name in `virsh list --all | grep "rd-overcloud-$NUM-" | awk '{print $2}'` ; do
     virsh destroy $name || true
     sleep 2
     virsh undefine $name || true
