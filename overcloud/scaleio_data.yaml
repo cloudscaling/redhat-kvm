@@ -30,11 +30,11 @@ parameters:
     default: 4443
     description: Port where gateway will listen.
 
-  AdminPassword:
+  ScaleIOAdminPassword:
     type: string
     default: "Default_password"
     description: "MDM password for admin"
-  ClientPassword:
+  ScaleIOClientPassword:
     type: string
     default: "Client_password"
     description: "Password for scaleio_client user that will be used for openstack services"
@@ -81,8 +81,8 @@ resources:
       - name: ScaleIODriverFTP
       - name: InstallSDSToCompute
       - name: GatewayPort
-      - name: AdminPassword
-      - name: ClientPassword
+      - name: ScaleIOAdminPassword
+      - name: ScaleIOClientPassword
       - name: DevicePaths
       config: |
         #!/bin/bash -e
@@ -93,8 +93,8 @@ resources:
         echo "export ScaleIODriverFTP='$ScaleIODriverFTP'" >> $FILE
         echo "export InstallSDSToCompute='$InstallSDSToCompute'" >> $FILE
         echo "export GatewayPort='$GatewayPort'" >> $FILE
-        echo "export AdminPassword='$AdminPassword'" >> $FILE
-        echo "export ClientPassword='$ClientPassword'" >> $FILE
+        echo "export ScaleIOAdminPassword='$ScaleIOAdminPassword'" >> $FILE
+        echo "export ScaleIOClientPassword='$ScaleIOClientPassword'" >> $FILE
         echo "export DevicePaths='$DevicePaths'" >> $FILE
 
   ScaleIODeploymentData:
@@ -108,6 +108,6 @@ resources:
         ScaleIODriverFTP: {get_param: ScaleIODriverFTP}
         InstallSDSToCompute: {get_param: InstallSDSToCompute}
         GatewayPort: {get_param: GatewayPort}
-        AdminPassword: {get_param: AdminPassword}
-        ClientPassword: {get_param: ClientPassword}
+        ScaleIOAdminPassword: {get_param: ScaleIOAdminPassword}
+        ScaleIOClientPassword: {get_param: ScaleIOClientPassword}
         DevicePaths: {get_param: DevicePaths}
