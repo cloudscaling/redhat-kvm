@@ -30,7 +30,7 @@ export NUM=0
 sudo ./create_env.sh
 sudo ./undercloud-install.sh
 # address depends on NUM varaible. check previous output for exact address
-sudo ssh -t -i kp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@192.168.172.2
+sudo ssh -t -i kp-$NUM -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@192.168.172.2
 
 su - stack
 ./overcloud-install.sh

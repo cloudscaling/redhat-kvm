@@ -66,8 +66,8 @@ mgmt_mac="00:16:00:00:0$NUM:02"
 prov_ip=$(get_network_ip "provisioning")
 prov_mac="00:16:00:00:0$NUM:06"
 # generate password/key for undercloud's root
-rm -f kp kp.pub
-ssh-keygen -b 2048 -t rsa -f "$my_dir/kp" -q -N ""
+rm -f kp-$NUM kp-$NUM.pub
+ssh-keygen -b 2048 -t rsa -f "$my_dir/kp-$NUM" -q -N ""
 rootpass=`openssl passwd -1 123`
 
 # TODO: use guestfish instead of manual attachment
@@ -90,7 +90,7 @@ function change_undercloud_image() {
   sed -i "s/{{mac-address}}/$prov_mac/g" $tmpdir/etc/sysconfig/network-scripts/ifcfg-eth1
   # configure root access
   mkdir -p $tmpdir/root/.ssh
-  cp "$my_dir/kp.pub" $tmpdir/root/.ssh/authorized_keys
+  cp "$my_dir/kp-$NUM.pub" $tmpdir/root/.ssh/authorized_keys
   echo "PS1='\${debian_chroot:+(\$debian_chroot)}undercloud:\[\033[01;31m\](\$?)\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\\$ '" >> $tmpdir/root/.bashrc
   sed -i "s root:\*: root:$rootpass: " $tmpdir/etc/shadow
   sed -i "s root:\!\!: root:$rootpass: " $tmpdir/etc/shadow
@@ -163,4 +163,4 @@ done
 # TODO: add timeout here
 # wait for undercloud machine
 truncate -s 0 ./tmp_file
-while ! scp -i kp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B ./tmp_file root@${mgmt_ip}.2:/tmp/tmp_file ; do echo "Waiting for undercloud..." ; sleep 30 ; done
+while ! scp -i kp-$NUM -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B ./tmp_file root@${mgmt_ip}.2:/tmp/tmp_file ; do echo "Waiting for undercloud..." ; sleep 30 ; done
