@@ -32,12 +32,18 @@ openstack undercloud install
 function create_images() {
   mkdir -p ~/images
   cd ~/images
-  export NODE_DIST=centos7
+
+  # next line is needed only if undercloud's OS is deifferent
+  #export NODE_DIST=centos7
+  export STABLE_RELEASE=mitaka
   export USE_DELOREAN_TRUNK=1
   export DELOREAN_REPO_FILE="delorean.repo"
-  #export DELOREAN_TRUNK_REPO="http://buildlogs.centos.org/centos/7/cloud/x86_64/rdo-trunk-master-tripleo/"
   export DELOREAN_TRUNK_REPO="http://trunk.rdoproject.org/centos7-mitaka/current/"
+  export DIB_YUM_REPO_CONF=/etc/yum.repos.d/delorean*
+
+  #export DELOREAN_TRUNK_REPO="http://buildlogs.centos.org/centos/7/cloud/x86_64/rdo-trunk-master-tripleo/"
   #export DIB_INSTALLTYPE_puppet_modules=source
+
   openstack overcloud image build --all
 }
 
