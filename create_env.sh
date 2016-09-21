@@ -3,9 +3,9 @@
 # suffix for deployment
 NUM=${NUM:-0}
 # number of machines in overcloud
-CONTROLLER_COUNT=3
-COMPUTE_COUNT=1
-STORAGE_COUNT=3
+CONTROLLER_COUNT=${CONTROLLER_COUNT:-1}
+COMPUTE_COUNT=${COMPUTE_COUNT:-1}
+STORAGE_COUNT=${STORAGE_COUNT:-3}
 
 my_file="$(readlink -e "$0")"
 my_dir="$(dirname $my_file)"
@@ -163,4 +163,4 @@ done
 # TODO: add timeout here
 # wait for undercloud machine
 truncate -s 0 ./tmp_file
-while ! scp -i kp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B ./tmp_file root@192.168.172.2:/tmp/tmp_file ; do echo "Waiting for undercloud..." ; sleep 30 ; done
+while ! scp -i kp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B ./tmp_file root@${mgmt_ip}.2:/tmp/tmp_file ; do echo "Waiting for undercloud..." ; sleep 30 ; done
