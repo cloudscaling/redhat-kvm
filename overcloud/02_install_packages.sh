@@ -17,7 +17,7 @@ else
   puppet module install --version "<1.2.0" cloudscaling-scaleio
 fi
 
-function server-cmd {
+function server-cmd() {
   puppet apply -e "$1" --detailed-exitcodes
   local exit_code=$?
   if [[ $exit_code != 0 && $exit_code != 2 ]]; then
@@ -26,10 +26,40 @@ function server-cmd {
   fi
 }
 
+function cluster-cmd() {
+    server-cmd "scaleio::login {'login': password=>'$AdminPassword'} -> $1"
+}
+
 role=$(hostname | cut -d '-' -f 2)
 if [[ "$role" == "controller" ]] ; then
 
-  server-cmd "class { 'scaleio::mdm_server': }"
+  # TODO: check format of these variables for more than one controller
+  ips="$(hiera controller_node_ips)"
+  names="$(hiera controller_node_names)"
+
+  name="$(hostname)"
+  # TODO: investigate networks definitions
+  internal_ip="$ips"
+  management_ip="$ips"
+
+  node_suffix=$(hostname | cut -d '-' -f 3)
+  # TODO: get index of node by $name from $names
+  node_index="$node_suffix"
+  if [[ $node_index == 0 ]] ; then
+    server-cmd "class { 'scaleio::mdm_server': master_mdm_name=>'$name', mdm_ips=>'$internal_ip', is_manager=>1, mdm_management_ips=>$management_ip }"
+    server-cmd "scaleio::login { 'first login': password=>'admin' }"
+    server-cmd "scaleio::cluster { 'cluster': password=>'admin', new_password=>'$AdminPassword' }"
+    cluster-cmd "scaleio::cluster { 'cluster': client_password=>'$client_password' }"
+
+    # TODO: add and provide options for cluster
+    # license-file-path, capacity-high-alert-threshold, capacity-critical-alert-threshold
+
+  else
+    # TODO: register other managers and tie-breakers (is_manager = 1 or 0)
+    # server-cmd "class { 'scaleio::mdm_server': is_manager=>$is_manager }"
+    echo "more than one controller is not supported"
+    exit 1
+  fi
 
   # TODO: support haproxy for gateway
   api_port=$GatewayPort

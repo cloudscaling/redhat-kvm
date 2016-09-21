@@ -30,6 +30,19 @@ parameters:
     default: 4443
     description: Port where gateway will listen.
 
+  AdminPassword:
+    type: string
+    default: "Default_password"
+    description: "MDM password for admin"
+  ClientPassword:
+    type: string
+    default: "Client_password"
+    description: "Password for scaleio_client user that will be used for openstack services"
+
+  DevicePaths:
+    type: string
+    description: Comma separated list of devices, e.g. /dev/sdb,/dev/sdc.
+
 
   ProtectionDomain:
     type: string
@@ -48,9 +61,6 @@ parameters:
     description: >
         Comma separated list for splitting devices between them.
         It could be just one element if all devices are belong to the one pool.
-  DevicePaths:
-    type: string
-    description: Comma separated list of devices, e.g. /dev/sdb,/dev/sdc.
   ProvisioningType:
     type: string
     default: thin
@@ -71,6 +81,9 @@ resources:
       - name: ScaleIODriverFTP
       - name: InstallSDSToCompute
       - name: GatewayPort
+      - name: AdminPassword
+      - name: ClientPassword
+      - name: DevicePaths
       config: |
         #!/bin/bash -e
         FILE='/etc/scaleio.env'
@@ -80,6 +93,9 @@ resources:
         echo "export ScaleIODriverFTP='$ScaleIODriverFTP'" >> $FILE
         echo "export InstallSDSToCompute='$InstallSDSToCompute'" >> $FILE
         echo "export GatewayPort='$GatewayPort'" >> $FILE
+        echo "export AdminPassword='$AdminPassword'" >> $FILE
+        echo "export ClientPassword='$ClientPassword'" >> $FILE
+        echo "export DevicePaths='$DevicePaths'" >> $FILE
 
   ScaleIODeploymentData:
     type: OS::Heat::SoftwareDeployments
@@ -92,3 +108,6 @@ resources:
         ScaleIODriverFTP: {get_param: ScaleIODriverFTP}
         InstallSDSToCompute: {get_param: InstallSDSToCompute}
         GatewayPort: {get_param: GatewayPort}
+        AdminPassword: {get_param: AdminPassword}
+        ClientPassword: {get_param: ClientPassword}
+        DevicePaths: {get_param: DevicePaths}

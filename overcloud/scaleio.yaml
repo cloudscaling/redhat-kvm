@@ -49,13 +49,28 @@ resources:
       input_values:
         update_identifier: {get_param: DeployIdentifier}
 
-  # 04. create cluster, add other MDM-s, add SDS-s
-  #     configure GW, configure cluster
-  # 05. configure SDC, configure OpenStack services
+
+  ExtraConfigFile3:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        get_file: 03_configure_cluster.sh
+  ScaleIODeployment_Step03:
+    type: OS::Heat::SoftwareDeployments
+    depends_on: ScaleIODeployment_Step02
+    properties:
+      name: ScaleIODeployment_Step03
+      servers:  {get_param: servers}
+      config: {get_resource: ExtraConfigFile3}
+      input_values:
+        update_identifier: {get_param: DeployIdentifier}
+
+  # TODO: configure SDC, configure OpenStack services
 
 
   # Note, this should come last, so use depends_on to ensure
   # this is created after any other resources.
   ExtraDeployments:
     type: OS::Heat::None
-    depends_on: ScaleIODeployment_Step02
+    depends_on: ScaleIODeployment_Step03
