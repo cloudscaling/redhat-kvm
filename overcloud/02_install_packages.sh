@@ -47,11 +47,13 @@ if [[ "$role" == "controller" ]] ; then
   node_index="$node_suffix"
   if [[ $node_index == 0 ]] ; then
 
-    # TODO: make next code idempotent!!!
-    server-cmd "class { 'scaleio::mdm_server': master_mdm_name=>'$name', mdm_ips=>'$internal_ip', is_manager=>1, mdm_management_ips=>'$management_ip' }"
-    server-cmd "scaleio::login { 'first login': password=>'admin' }"
-    server-cmd "scaleio::cluster { 'cluster': password=>'admin', new_password=>'$ScaleIOAdminPassword' }"
-    cluster-cmd "scaleio::cluster { 'cluster': client_password=>'$ScaleIOClientPassword' }"
+    # next code must be idempotent!!!
+    if ! scli --query_cluster ; then
+      server-cmd "class { 'scaleio::mdm_server': master_mdm_name=>'$name', mdm_ips=>'$internal_ip', is_manager=>1, mdm_management_ips=>'$management_ip' }"
+      server-cmd "scaleio::login { 'first login': password=>'admin' }"
+      server-cmd "scaleio::cluster { 'cluster': password=>'admin', new_password=>'$ScaleIOAdminPassword' }"
+      cluster-cmd "scaleio::cluster { 'cluster': client_password=>'$ScaleIOClientPassword' }"
+    fi
 
     # TODO: add and provide options for cluster
     # license-file-path, capacity-high-alert-threshold, capacity-critical-alert-threshold
