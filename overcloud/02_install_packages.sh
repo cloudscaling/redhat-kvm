@@ -75,13 +75,12 @@ elif [[ "$role" == "novacompute" ]] ; then
 
   server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP' }"
 
-  if [[ $InstallSDSToCompute == 'True' ]] ; then
-    server-cmd "class { 'scaleio::sds_server': ftp=>'$ScaleIODriverFTP' }"
-  fi
-
 elif [[ "$role" == "blockstorage" ]] ; then
 
   server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP' }"
-  server-cmd "class { 'scaleio::sds_server': ftp=>'$ScaleIODriverFTP' }"
 
+fi
+
+if [[ $RolesForSDS =~ $role ]] ; then
+  server-cmd "class { 'scaleio::sds_server': ftp=>'$ScaleIODriverFTP' }"
 fi
