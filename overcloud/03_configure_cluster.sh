@@ -44,9 +44,16 @@ if [[ "$role" == "controller" ]] ; then
     #cluster-cmd "scaleio::mdm { 'mdm $node': sio_name=>'$name', ips=>'$internal_ip', role=>'$role', management_ips=>$management_ip }"
 
     # get somewhere a list of all nodes
-    # and 'for node in nodes ; do if role(node) in sds_roles ; then ...'
-    # server-cmd "scaleio::sds { '$name': sio_name=>'$name', ips=>'$local_ip', ip_roles=>'all', protection_domain=>'$pd', storage_pools=>'$sps', device_paths=>'$DevicePaths' }"
-
+    # this hack is for Mitaka. for Newton we can get it from hiera (service_node_names)
+    cloud_name=$(hostname | cut -d '-' -f 1)
+    nodes=`grep -o "${cloud_name}-[a-zA-Z]*-[0-9]\$" /etc/hosts`
+    for node in $nodes ; do
+      role=$(echo $node | cut -d '-' -f 2)
+      if [[ $RolesForSDS =~ $role ]] ; then
+        ip=`python -c "import socket; print(sorted(socket.gethostbyname_ex('$node')[2])[0])"`
+        server-cmd "scaleio::sds { '$node': sio_name=>'$node', ips=>'$ip', ip_roles=>'all', protection_domain=>'$pd', storage_pools=>'$sps', device_paths=>'$DevicePaths' }"
+      fi
+    done
   fi
 
 elif [[ "$role" == "novacompute" ]] ; then
