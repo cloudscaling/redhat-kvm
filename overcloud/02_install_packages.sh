@@ -48,7 +48,7 @@ if [[ "$role" == "controller" ]] ; then
   if [[ $node_index == 0 ]] ; then
 
     # next code must be idempotent!!!
-    if ! scli --query_cluster ; then
+    if ! scli --query_cluster --approve_certificate ; then
       server-cmd "class { 'scaleio::mdm_server': master_mdm_name=>'$name', mdm_ips=>'$internal_ip', is_manager=>1, mdm_management_ips=>'$management_ip' }"
       server-cmd "scaleio::login { 'first login': password=>'admin' }"
       server-cmd "scaleio::cluster { 'cluster': password=>'admin', new_password=>'$ScaleIOAdminPassword' }"

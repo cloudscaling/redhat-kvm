@@ -12,7 +12,7 @@ function server-cmd() {
 }
 
 function cluster-cmd() {
-    server-cmd "scaleio::login {'login': password=>'$AdminPassword'} -> $1"
+    server-cmd "scaleio::login {'login': password=>'$ScaleIOAdminPassword'} -> $1"
 }
 
 # these variable are a comma separated list
@@ -23,9 +23,10 @@ name="$(hostname)"
 
 local_ip=`python -c "import socket; print(sorted(socket.gethostbyname_ex('$name')[2])[0])"`
 
-# TODO: pass correct protection domain name and storage pools
+# TODO: pass correct protection domain name and storage pools(comma separated)
 pd='pd'
 sps='sp1'
+fs='fs'
 
 role=$(hostname | cut -d '-' -f 2)
 if [[ "$role" == "controller" ]] ; then
@@ -39,8 +40,8 @@ if [[ "$role" == "controller" ]] ; then
     server-cmd "class { 'scaleio::gateway_server': mdm_ips=>'$ips' }"
 
     # TODO: investigate networks definitions
-    export FACTER_mdm_ips='$ips'
-    # TODO: add stndby mdms if needed
+    export FACTER_mdm_ips="$ips"
+    # TODO: add standby mdms if needed
     #cluster-cmd "scaleio::mdm { 'mdm $node': sio_name=>'$name', ips=>'$internal_ip', role=>'$role', management_ips=>$management_ip }"
 
     # get somewhere a list of all nodes
@@ -50,8 +51,16 @@ if [[ "$role" == "controller" ]] ; then
     for node in $nodes ; do
       role=$(echo $node | cut -d '-' -f 2)
       if [[ $RolesForSDS =~ $role ]] ; then
+
+        cluster-cmd "scaleio::protection_domain { 'protection domain $protection_domain': sio_name=>'$pd', fault_sets=>[$fs], storage_pools=>[$sps] }"
+        for pool in `echo "$sps" | tr "," " "` ; do
+          # TODO: define and pass storage pool options
+          cluster-cmd "scaleio::storage_pool { 'storage pool $pool': sio_name=>'$pool', protection_domain=>'$pd' }"
+        done
+
         ip=`python -c "import socket; print(sorted(socket.gethostbyname_ex('$node')[2])[0])"`
-        server-cmd "scaleio::sds { '$node': sio_name=>'$node', ips=>'$ip', ip_roles=>'all', protection_domain=>'$pd', storage_pools=>'$sps', device_paths=>'$DevicePaths' }"
+        # TODO: define and pass SDS options
+        cluster-cmd "scaleio::sds { '$node': sio_name=>'$node', ips=>'$ip', ip_roles=>'all', protection_domain=>'$pd', storage_pools=>'$sps', device_paths=>'$DevicePaths' }"
       fi
     done
   fi

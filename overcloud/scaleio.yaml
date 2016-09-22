@@ -49,7 +49,6 @@ resources:
       input_values:
         update_identifier: {get_param: DeployIdentifier}
 
-
   ExtraConfigFile3:
     type: OS::Heat::SoftwareConfig
     properties:
