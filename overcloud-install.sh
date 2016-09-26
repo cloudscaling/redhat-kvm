@@ -71,7 +71,7 @@ function define_machine() {
       "pm_user": "$SSH_USER",
       "pm_password": "$id_rsa",
       "pm_type": "pxe_ssh",
-      "ssh_virt_type": $SSH_VIRT_TYPE,
+      "ssh_virt_type": "$SSH_VIRT_TYPE",
       "mac": [
         "$mac"
       ],
