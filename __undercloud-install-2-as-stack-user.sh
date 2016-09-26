@@ -4,6 +4,7 @@
 
 cd ~
 
+NETDEV=${NETDEV:-'eth1'}
 ((addr=176+NUM*10))
 prov_ip="192.168.$addr"
 ((addr=172+NUM*10))
@@ -16,7 +17,7 @@ cat << EOF >> undercloud.conf
 local_ip = $prov_ip.1/24
 undercloud_public_vip = $prov_ip.10
 undercloud_admin_vip = $prov_ip.11
-local_interface = eth1
+local_interface = $NETDEV
 masquerade_network = $prov_ip.0/24
 dhcp_start = $prov_ip.100
 dhcp_end = $prov_ip.120

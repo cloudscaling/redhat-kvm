@@ -5,6 +5,8 @@
 my_file="$(readlink -e "$0")"
 my_dir="$(dirname $my_file)"
 
+NETDEV=${NETDEV:-'eth1'}
+
 # allow ip forwarding
 echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
 sysctl -p /etc/sysctl.conf
@@ -18,10 +20,14 @@ systemctl restart network
 yum update -y
 
 # create stack user
-useradd stack
-echo "stack:password" | chpasswd
-echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack
-chmod 0440 /etc/sudoers.d/stack
+if ! grep -q 'stack' /etc/passwd ; then 
+  useradd stack
+  echo "stack:password" | chpasswd
+  echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack
+  chmod 0440 /etc/sudoers.d/stack
+else
+  echo User stack is already exist
+fi
 
 # install useful utils
 yum install -y yum-utils screen mc
@@ -36,7 +42,7 @@ yum -y install yum-plugin-priorities python-tripleoclient python-rdomanager-oscp
 
 cp "$my_dir/__undercloud-install-2-as-stack-user.sh" /home/stack/
 chown stack /home/stack/__undercloud-install-2-as-stack-user.sh
-sudo -u stack NUM=$NUM /home/stack/__undercloud-install-2-as-stack-user.sh
+sudo -u stack NUM=$NUM NETDEV=$NETDEV /home/stack/__undercloud-install-2-as-stack-user.sh
 
 # increase timeouts due to virtual installation
 openstack-config --set /etc/nova/nova.conf DEFAULT rpc_response_timeout 600
