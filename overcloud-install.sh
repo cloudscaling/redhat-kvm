@@ -2,6 +2,9 @@
 
 # common setting from create_env.sh
 NUM=${NUM:-0}
+SSH_VIRT_TYPE=${VIRT_TYPE:-'virsh'}
+BASE_ADDR=${BASE_ADDR:-172}
+MEMORY=${MEMORY:-8192}
 
 # su - stack
 
@@ -10,11 +13,20 @@ if [[ "$(whoami)" != "stack" ]] ; then
   exit 1
 fi
 
-((addr=172+NUM*10))
+((addr=BASE_ADDR+NUM*10))
+virt_host_ip="192.168.${addr}.1"
+if [[ "$SSH_VIRT_TYPE" != 'vbox' ]] ; then
+  virsh_opts="-c qemu+ssh://stack@${virt_host_ip}/system"
+  list_vm_cmd="virsh $virsh_opts list --all"
+else
+  ssh_opts="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+  ssh_addr="stack@${virt_host_ip}"
+  list_vm_cmd="ssh $ssh_opts $ssh_addr 'VBoxManage list vms'"
+fi
 
-CONTROLLER_COUNT=$(virsh -c qemu+ssh://stack@192.168.$addr.1/system list --all | grep rd-overcloud-$NUM-cont | wc -l)
-COMPUTE_COUNT=$(virsh -c qemu+ssh://stack@192.168.$addr.1/system list --all | grep rd-overcloud-$NUM-comp | wc -l)
-STORAGE_COUNT=$(virsh -c qemu+ssh://stack@192.168.$addr.1/system list --all | grep rd-overcloud-$NUM-stor | wc -l)
+CONTROLLER_COUNT=$($list_vm_cmd | grep rd-overcloud-$NUM-cont | wc -l)
+COMPUTE_COUNT=$($list_vm_cmd | grep rd-overcloud-$NUM-comp | wc -l)
+STORAGE_COUNT=$($list_vm_cmd | grep rd-overcloud-$NUM-stor | wc -l)
 ((OCM_COUNT=CONTROLLER_COUNT+COMPUTE_COUNT+STORAGE_COUNT))
 
 # collect MAC addresses of overcloud machines
@@ -22,7 +34,13 @@ function get_macs() {
   type=$1
   count=$2
   truncate -s 0 /tmp/nodes-$type.txt
-  for (( i=1; i<=count; i++ )) ; do virsh -c qemu+ssh://stack@192.168.$addr.1/system domiflist rd-overcloud-$NUM-$type-$i | awk '$3 ~ "prov" {print $5};' ; done > /tmp/nodes-$type.txt
+  for (( i=1; i<=count; i++ )) ; do
+    if [[ "$SSH_VIRT_TYPE" != 'vbox' ]] ; then
+      virsh $virsh_opts domiflist rd-overcloud-$NUM-$type-$i | awk '$3 ~ "prov" {print $5};'
+    else
+      ssh $ssh_opts $ssh_addr 'VBoxManage showvminfo rd-overcloud-$NUM-$type-$i' | awk '/NIC 1/ {print $4}' | cut -d ',' -f 1 | sed 's/\(..\)/\1:/g' | sed 's/:$//'
+    fi
+  done > /tmp/nodes-$type.txt
   echo "macs for '$type':"
   cat /tmp/nodes-$type.txt
 }
@@ -37,7 +55,7 @@ cat << EOF > ~/instackenv.json
 {
   "ssh-user": "stack",
   "ssh-key": "$id_rsa",
-  "host-ip": "192.168.$addr.1",
+  "host-ip": "$virt_host_ip",
   "power_manager": "nova.virt.baremetal.virtual_power_driver.VirtualPowerManager",
   "arch": "x86_64",
   "nodes": [
@@ -48,15 +66,16 @@ function define_machine() {
   mac=$2
   cat << EOF >> ~/instackenv.json
     {
-      "pm_addr": "192.168.$addr.1",
+      "pm_addr": "$virt_host_ip",
       "pm_user": "stack",
       "pm_password": "$id_rsa",
       "pm_type": "pxe_ssh",
+      "ssh_virt_type": $SSH_VIRT_TYPE,
       "mac": [
         "$mac"
       ],
       "cpu": "2",
-      "memory": "8192",
+      "memory": "$MEMORY",
       "disk": "30",
       "arch": "x86_64",
       "capabilities": "$caps"
