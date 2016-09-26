@@ -23,10 +23,13 @@ name="$(hostname)"
 
 local_ip=`python -c "import socket; print(sorted(socket.gethostbyname_ex('$name')[2])[0])"`
 
-# TODO: pass correct protection domain name and storage pools(comma separated)
-pd='pd'
-sps='sp1'
-fs='fs'
+protection_domains_array=($(echo ${ProtectionDomain:-'pd'} | sed 's/,/ /g'))
+storage_pools_list=${StoragePools:-'sp1'}
+storage_pools_array=($(echo $storage_pools_list | sed 's/,/ /g'))
+
+
+# TODO: pass correct fault sets
+fault_sets_list='fs'
 
 role=$(hostname | cut -d '-' -f 2)
 if [[ "$role" == "controller" ]] ; then
@@ -51,11 +54,12 @@ if [[ "$role" == "controller" ]] ; then
     for node in $nodes ; do
       role=$(echo $node | cut -d '-' -f 2)
       if [[ $RolesForSDS =~ $role ]] ; then
-
-        cluster-cmd "scaleio::protection_domain { 'protection domain $protection_domain': sio_name=>'$pd', fault_sets=>[$fs], storage_pools=>[$sps] }"
-        for pool in `echo "$sps" | tr "," " "` ; do
-          # TODO: define and pass storage pool options
-          cluster-cmd "scaleio::storage_pool { 'storage pool $pool': sio_name=>'$pool', protection_domain=>'$pd' }"
+        for pd in ${protection_domains_array[@]} ; do
+          cluster-cmd "scaleio::protection_domain { 'protection domain $pd': sio_name=>'$pd', fault_sets=>[$fault_sets_list], storage_pools=>[$storage_pools_list] }"
+          for sp in ${storage_pools_array[@]} ; do
+            # TODO: define and pass storage pool options
+            cluster-cmd "scaleio::storage_pool { 'storage pool $sp': sio_name=>'$sp', protection_domain=>'$pd' }"
+          done
         done
 
         ip=`python -c "import socket; print(sorted(socket.gethostbyname_ex('$node')[2])[0])"`

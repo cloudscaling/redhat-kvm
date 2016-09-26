@@ -84,6 +84,8 @@ resources:
       - name: ScaleIOAdminPassword
       - name: ScaleIOClientPassword
       - name: DevicePaths
+      - name: ProtectionDomain
+      - name: StoragePools
       config: |
         #!/bin/bash -e
         FILE='/etc/scaleio.env'
@@ -96,6 +98,8 @@ resources:
         echo "export ScaleIOAdminPassword='$ScaleIOAdminPassword'" >> $FILE
         echo "export ScaleIOClientPassword='$ScaleIOClientPassword'" >> $FILE
         echo "export DevicePaths='$DevicePaths'" >> $FILE
+        echo "export ProtectionDomain='$ProtectionDomain'" >> $FILE
+        echo "export StoragePools='$StoragePools'" >> $FILE
 
   ScaleIODeploymentData:
     type: OS::Heat::SoftwareDeployments
@@ -111,3 +115,6 @@ resources:
         ScaleIOAdminPassword: {get_param: ScaleIOAdminPassword}
         ScaleIOClientPassword: {get_param: ScaleIOClientPassword}
         DevicePaths: {get_param: DevicePaths}
+        ProtectionDomain: {get_param: ProtectionDomain}
+        StoragePools: {get_param: StoragePools}
+
