@@ -115,13 +115,13 @@ source ./stackrc
 # re-define flavors
 for id in `openstack flavor list -f value -c ID` ; do openstack flavor delete $id ; done
 
-openstack flavor create --id auto --ram 8192 --disk 28 --vcpus 2 baremetal
+openstack flavor create --id auto --ram $MEMORY --disk 28 --vcpus 2 baremetal
 openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" baremetal
-openstack flavor create --id auto --ram 8192 --disk 28 --vcpus 2 control
+openstack flavor create --id auto --ram $MEMORY --disk 28 --vcpus 2 control
 openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" --property "capabilities:profile"="control" control
-openstack flavor create --id auto --ram 8192 --disk 28 --vcpus 2 compute
+openstack flavor create --id auto --ram $MEMORY --disk 28 --vcpus 2 compute
 openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" --property "capabilities:profile"="compute" compute
-openstack flavor create --id auto --ram 8192 --disk 28 --vcpus 2 block-storage
+openstack flavor create --id auto --ram $MEMORY --disk 28 --vcpus 2 block-storage
 openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" --property "capabilities:profile"="block-storage" block-storage
 openstack flavor list --long
 
