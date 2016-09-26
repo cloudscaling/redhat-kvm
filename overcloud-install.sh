@@ -22,7 +22,7 @@ if [[ "$SSH_VIRT_TYPE" != 'vbox' ]] ; then
 else
   ssh_opts="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
   ssh_addr="${SSH_USER}@${virt_host_ip}"
-  list_vm_cmd="ssh $ssh_opts $ssh_addr 'VBoxManage list vms'"
+  list_vm_cmd="ssh $ssh_opts $ssh_addr /usr/bin/VBoxManage list vms"
 fi
 
 CONTROLLER_COUNT=$($list_vm_cmd | grep rd-overcloud-$NUM-cont | wc -l)
@@ -39,7 +39,7 @@ function get_macs() {
     if [[ "$SSH_VIRT_TYPE" != 'vbox' ]] ; then
       virsh $virsh_opts domiflist rd-overcloud-$NUM-$type-$i | awk '$3 ~ "prov" {print $5};'
     else
-      ssh $ssh_opts $ssh_addr 'VBoxManage showvminfo rd-overcloud-$NUM-$type-$i' | awk '/NIC 1/ {print $4}' | cut -d ',' -f 1 | sed 's/\(..\)/\1:/g' | sed 's/:$//'
+      ssh $ssh_opts $ssh_addr /usr/bin/VBoxManage showvminfo rd-overcloud-$NUM-$type-$i | awk '/NIC 1/ {print $4}' | cut -d ',' -f 1 | sed 's/\(..\)/\1:/g' | sed 's/:$//'
     fi
   done > /tmp/nodes-$type.txt
   echo "macs for '$type':"
