@@ -5,6 +5,7 @@ NUM=${NUM:-0}
 SSH_VIRT_TYPE=${VIRT_TYPE:-'virsh'}
 BASE_ADDR=${BASE_ADDR:-172}
 MEMORY=${MEMORY:-8192}
+SSH_USER=${SSH_USER:-'stack'}
 
 # su - stack
 
@@ -16,11 +17,11 @@ fi
 ((addr=BASE_ADDR+NUM*10))
 virt_host_ip="192.168.${addr}.1"
 if [[ "$SSH_VIRT_TYPE" != 'vbox' ]] ; then
-  virsh_opts="-c qemu+ssh://stack@${virt_host_ip}/system"
+  virsh_opts="-c qemu+ssh://${SSH_USER}@${virt_host_ip}/system"
   list_vm_cmd="virsh $virsh_opts list --all"
 else
   ssh_opts="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-  ssh_addr="stack@${virt_host_ip}"
+  ssh_addr="${SSH_USER}@${virt_host_ip}"
   list_vm_cmd="ssh $ssh_opts $ssh_addr 'VBoxManage list vms'"
 fi
 
@@ -53,7 +54,7 @@ id_rsa=$(awk 1 ORS='\\n' ~/.ssh/id_rsa)
 # create overcloud machines definition
 cat << EOF > ~/instackenv.json
 {
-  "ssh-user": "stack",
+  "ssh-user": "$SSH_USER",
   "ssh-key": "$id_rsa",
   "host-ip": "$virt_host_ip",
   "power_manager": "nova.virt.baremetal.virtual_power_driver.VirtualPowerManager",
@@ -67,7 +68,7 @@ function define_machine() {
   cat << EOF >> ~/instackenv.json
     {
       "pm_addr": "$virt_host_ip",
-      "pm_user": "stack",
+      "pm_user": "$SSH_USER",
       "pm_password": "$id_rsa",
       "pm_type": "pxe_ssh",
       "ssh_virt_type": $SSH_VIRT_TYPE,
