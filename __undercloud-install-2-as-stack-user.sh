@@ -5,6 +5,7 @@
 cd ~
 
 NETDEV=${NETDEV:-'eth1'}
+SKIP_SSH_TO_HOST_KEY=${SKIP_SSH_TO_HOST_KEY:-'no'}
 ((addr=176+NUM*10))
 prov_ip="192.168.$addr"
 ((addr=172+NUM*10))
@@ -72,4 +73,6 @@ chmod 644 .ssh/config
 
 # copy ssh key from undercloud machine to KVM host. it needs to allow control of host VM's from undercloud's ironic service
 # TODO: this command needs to input password - rework it to batch mode
-sshpass -p password ssh -i ~/.ssh/id_rsa stack@${mgmt_ip}.1 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "echo $(cat ~/.ssh/id_rsa.pub) > .ssh/authorized_keys ; chmod 600 .ssh/authorized_keys"
+if [[ "$SKIP_SSH_TO_HOST_KEY" != "yes" ]] ; then
+  sshpass -p password ssh -i ~/.ssh/id_rsa stack@${mgmt_ip}.1 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "echo $(cat ~/.ssh/id_rsa.pub) > .ssh/authorized_keys ; chmod 600 .ssh/authorized_keys"
+fi

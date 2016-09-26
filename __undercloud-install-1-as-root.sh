@@ -6,6 +6,8 @@ my_file="$(readlink -e "$0")"
 my_dir="$(dirname $my_file)"
 
 NETDEV=${NETDEV:-'eth1'}
+SKIP_SSH_TO_HOST_KEY=${SKIP_SSH_TO_HOST_KEY:-'no'}
+
 
 # allow ip forwarding
 echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
@@ -42,7 +44,7 @@ yum -y install yum-plugin-priorities python-tripleoclient python-rdomanager-oscp
 
 cp "$my_dir/__undercloud-install-2-as-stack-user.sh" /home/stack/
 chown stack /home/stack/__undercloud-install-2-as-stack-user.sh
-sudo -u stack NUM=$NUM NETDEV=$NETDEV /home/stack/__undercloud-install-2-as-stack-user.sh
+sudo -u stack NUM=$NUM NETDEV=$NETDEV SKIP_SSH_TO_HOST_KEY=$SKIP_SSH_TO_HOST_KEY /home/stack/__undercloud-install-2-as-stack-user.sh
 
 # increase timeouts due to virtual installation
 openstack-config --set /etc/nova/nova.conf DEFAULT rpc_response_timeout 600

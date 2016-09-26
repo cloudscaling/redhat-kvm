@@ -7,6 +7,7 @@ NUM=${NUM:-0}
 BASE_ADDR=${BASE_ADDR:-172}
 IMAGES=${IMAGES:-'/home/stack/images.tar'}
 NETDEV=${NETDEV:-'eth1'}
+SKIP_SSH_TO_HOST_KEY=${SKIP_SSH_TO_HOST_KEY:-'no'}
 
 # on kvm host do once: create stack user, create home directory, add him to libvirtd group
 ((env_addr=BASE_ADDR+NUM*10))
@@ -23,12 +24,12 @@ done
 for fff in __undercloud-install-1-as-root.sh __undercloud-install-2-as-stack-user.sh ; do
   scp $ssh_opts -B $fff ${ssh_addr}:/root/$fff
 done
-ssh -t $ssh_opts $ssh_addr "NUM=$NUM NETDEV=$NETDEV /root/__undercloud-install-1-as-root.sh"
+ssh -t $ssh_opts $ssh_addr "NUM=$NUM NETDEV=$NETDEV SKIP_SSH_TO_HOST_KEY=$SKIP_SSH_TO_HOST_KEY /root/__undercloud-install-1-as-root.sh"
 
 # TODO: temporary solution - 'overcloud' directory will be moved to separate repository later
 rm -f oc.tar
 tar cvf oc.tar overcloud
-sudo scp $ssh_opts oc.tar ${ssh_addr}:/home/stack/oc.tar
-sudo scp $ssh_opts overcloud-install.sh ${ssh_addr}:/home/stack/overcloud-install.sh
+scp $ssh_opts oc.tar ${ssh_addr}:/home/stack/oc.tar
+scp $ssh_opts overcloud-install.sh ${ssh_addr}:/home/stack/overcloud-install.sh
 
 echo "SSH into undercloud: ssh -t $ssh_opts $ssh_addr"
