@@ -5,7 +5,9 @@ NUM=${NUM:-0}
 SSH_VIRT_TYPE=${VIRT_TYPE:-'virsh'}
 BASE_ADDR=${BASE_ADDR:-172}
 MEMORY=${MEMORY:-8192}
+SWAP=${SWAP:-0}
 SSH_USER=${SSH_USER:-'stack'}
+
 
 # su - stack
 
@@ -115,13 +117,17 @@ source ./stackrc
 # re-define flavors
 for id in `openstack flavor list -f value -c ID` ; do openstack flavor delete $id ; done
 
-openstack flavor create --id auto --ram $MEMORY --disk 28 --vcpus 2 baremetal
+swap_opts=''
+if [[ $SWAP != 0 ]] ; then
+  swap_opts="--swap $SWAP"
+fi
+openstack flavor create --id auto --ram $MEMORY $swap_opts --disk 28 --vcpus 2 baremetal
 openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" baremetal
-openstack flavor create --id auto --ram $MEMORY --disk 28 --vcpus 2 control
+openstack flavor create --id auto --ram $MEMORY $swap_opts --disk 28 --vcpus 2 control
 openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" --property "capabilities:profile"="control" control
-openstack flavor create --id auto --ram $MEMORY --disk 28 --vcpus 2 compute
+openstack flavor create --id auto --ram $MEMORY $swap_opts --disk 28 --vcpus 2 compute
 openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" --property "capabilities:profile"="compute" compute
-openstack flavor create --id auto --ram $MEMORY --disk 28 --vcpus 2 block-storage
+openstack flavor create --id auto --ram $MEMORY $swap_opts --disk 28 --vcpus 2 block-storage
 openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" --property "capabilities:profile"="block-storage" block-storage
 openstack flavor list --long
 
@@ -144,6 +150,8 @@ echo "openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neut
   --control-scale $CONTROLLER_COUNT --compute-scale $COMPUTE_COUNT --block-storage-scale $STORAGE_COUNT \
   --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
   -e overcloud/scaleio-env.yaml"
+echo Add -e templates/firstboot/firstboot.yaml if you use swap
+
 
 # check status of deployment. other heat commands also is useful to check status.
 # heat resource-list -n 5 overcloud

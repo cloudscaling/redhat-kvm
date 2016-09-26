@@ -15,6 +15,17 @@ function cluster-cmd() {
     server-cmd "scaleio::login {'login': password=>'$ScaleIOAdminPassword'} -> $1"
 }
 
+function is_in_list() {
+  value=$1
+  list=$2
+  for i in $(echo $list | sed 's/,/ /g') ; do
+    if [[ $i == $value ]] ; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 # these variable are a comma separated list
 ips="$(hiera controller_node_ips)"
 names="$(hiera controller_node_names)"
@@ -23,13 +34,12 @@ name="$(hostname)"
 
 local_ip=`python -c "import socket; print(sorted(socket.gethostbyname_ex('$name')[2])[0])"`
 
-protection_domains_array=($(echo ${ProtectionDomain:-'pd'} | sed 's/,/ /g'))
-storage_pools_list=${StoragePools:-'sp1'}
+protection_domains_array=($(echo ${ProtectionDomain:-''} | sed 's/,/ /g'))
+storage_pools_list=${StoragePools:-''}
 storage_pools_array=($(echo $storage_pools_list | sed 's/,/ /g'))
 
-
 # TODO: pass correct fault sets
-fault_sets_list='fs'
+fault_sets_list=''
 
 role=$(hostname | cut -d '-' -f 2)
 if [[ "$role" == "controller" ]] ; then
@@ -55,16 +65,43 @@ if [[ "$role" == "controller" ]] ; then
       role=$(echo $node | cut -d '-' -f 2)
       if [[ $RolesForSDS =~ $role ]] ; then
         for pd in ${protection_domains_array[@]} ; do
-          cluster-cmd "scaleio::protection_domain { 'protection domain $pd': sio_name=>'$pd', fault_sets=>[$fault_sets_list], storage_pools=>[$storage_pools_list] }"
+          pd_opts="sio_name=>'$pd'"
+          if [[ -n "$storage_pools_list" ]] ; then
+            pd_opts+=", storage_pools=>[$storage_pools_list]"
+          fi
+          if [[ -n "$fault_sets_list" ]] ; then
+            pd_opts+=", fault_sets=>[$fault_sets_list]"
+          fi
+          cluster-cmd "scaleio::protection_domain { 'protection domain $pd': $pd_opts }"
           for sp in ${storage_pools_array[@]} ; do
-            # TODO: define and pass storage pool options
-            cluster-cmd "scaleio::storage_pool { 'storage pool $sp': sio_name=>'$sp', protection_domain=>'$pd' }"
+            sp_opts="sio_name=>'$sp', protection_domain=>'$pd', checksum_mode=>"
+            if [[ $ChecksumMode == "True" ]] ; then sp_opts+="'enable'"; else sp_opts+="'disable'"; fi
+            sp_opts+=", scanner_mode=>"
+            if [[ $ScannerMode == "True" ]] ; then sp_opts+="'enable'"; else sp_opts+="'disable'"; fi
+            sp_opts+=", zero_padding_policy=>"
+            if [[ $ZeroPadding == "True" ]] ; then sp_opts+="'enable'"; else sp_opts+="'disable'"; fi
+            sp_opts+=", spare_percentage=>$SparePolicy"
+            sp_opts+=", rfcache_usage=>"
+            if is_in_list $sp "$RFCacheCachedPools" ; then sp_opts+="'use'"; else sp_opts+="'dont_use'"; fi
+            sp_opts+=", rmcache_usage=>"
+            if is_in_list $sp "$RMCacheCachedPools" ; then
+              sp_opts+="'use', rmcache_write_handling_mode=>'cached'"
+            elif is_in_list $sp "$RMCachePassthroughPools" ; then
+              sp_opts+="'use', rmcache_write_handling_mode=>'passthrough'"
+            else
+              sp_opts+="'dont_use'"
+            fi
+            cluster-cmd "scaleio::storage_pool { 'storage pool $sp': $sp_opts }"
           done
         done
 
         ip=`python -c "import socket; print(sorted(socket.gethostbyname_ex('$node')[2])[0])"`
         # TODO: define and pass SDS options
-        cluster-cmd "scaleio::sds { '$node': sio_name=>'$node', ips=>'$ip', ip_roles=>'all', protection_domain=>'$pd', storage_pools=>'$sps', device_paths=>'$DevicePaths' }"
+        sds_opts="sio_name=>'$node', ips=>'$ip', ip_roles=>'all', protection_domain=>'$pd', storage_pools=>'$sps', device_paths=>'$DevicePaths'"
+        if [[ -n "$RFCacheDevices" ]] ; then
+          sds_opts+=", rfcache_devices=>'$RFCacheDevices'"
+        fi
+        cluster-cmd "scaleio::sds { '$node': $sds_opts }"
       fi
     done
   fi
