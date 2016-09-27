@@ -57,7 +57,6 @@ parameters:
   StoragePools:
     type: string
     default: default
-    label: Storage pools
     description: >
         Comma separated list for splitting devices between them.
         It could be just one element if all devices are belong to the one pool.
@@ -73,40 +72,38 @@ parameters:
 
   ChecksumMode:
     type: boolean
-    value: false
+    default: false
     description: >
         Checksum protection. ScaleIO protects data in-flight by calculating and validating the checksum value for the payload at both ends.
         Note, the checksum feature may have a minor effect on performance.
         ScaleIO utilizes hardware capabilities for this feature, where possible.
   SparePolicy:
     type: number
-    value: 10
+    default: 10
     description: "Spare policy: % out of total space."
   ZeroPadding:
     type: boolean
-    value: true
+    default: true
     description: "Enable Zero Padding for Storage Pools. New volumes will be zeroed if the option enabled."
   ScannerMode:
     type: boolean
-    value: false
+    default: false
     description: "Background device scanner. This options enables the background device scanner on the devices in device only mode."
   RMCachePassthroughPools:
     type: string
-    value: ""
+    default: ""
     description: "List of Storage pools which should be cached in RAM in passthrough mode (writes to storage only)."
   RMCacheCachedPools:
     type: string
-    value: ""
-    label: ""
+    default: ""
     description: "List of Storage pools which should be cached in RAM in cached mode (writes both to cache and to storage)."
   RFCacheDevices:
     type: string
-    value: ""
+    default: ""
     description: "List of SDS devices for SSD caching. Cache is disabled if list empty."
   RFCacheCachedPools:
     type: string
-    value: ""
-    label: ""
+    default: ""
     description: "List of Storage pools which should be cached on SSD."
 
 
