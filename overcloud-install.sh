@@ -74,6 +74,7 @@ function define_machine() {
       "pm_password": "$id_rsa",
       "pm_type": "pxe_ssh",
       "ssh_virt_type": "$SSH_VIRT_TYPE",
+      "vbox_use_headless": "True",
       "mac": [
         "$mac"
       ],
