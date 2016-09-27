@@ -37,6 +37,7 @@ local_ip=`python -c "import socket; print(sorted(socket.gethostbyname_ex('$name'
 protection_domains_array=($(echo ${ProtectionDomain:-''} | sed 's/,/ /g'))
 storage_pools_list=${StoragePools:-''}
 storage_pools_array=($(echo $storage_pools_list | sed 's/,/ /g'))
+device_paths_list=${DevicePaths:-''}
 
 # TODO: pass correct fault sets
 fault_sets_list=''
@@ -67,10 +68,12 @@ if [[ "$role" == "controller" ]] ; then
         for pd in ${protection_domains_array[@]} ; do
           pd_opts="sio_name=>'$pd'"
           if [[ -n "$storage_pools_list" ]] ; then
-            pd_opts+=", storage_pools=>[$storage_pools_list]"
+            sps="'$(echo $storage_pools_list | sed 's/,/'\'','\''/g')'"
+            pd_opts+=", storage_pools=>[$sps]"
           fi
           if [[ -n "$fault_sets_list" ]] ; then
-            pd_opts+=", fault_sets=>[$fault_sets_list]"
+            fss="'$(echo $fault_sets_list | sed 's/,/'\'','\''/g')'"
+            pd_opts+=", fault_sets=>[$fss]"
           fi
           cluster-cmd "scaleio::protection_domain { 'protection domain $pd': $pd_opts }"
           for sp in ${storage_pools_array[@]} ; do
@@ -96,11 +99,15 @@ if [[ "$role" == "controller" ]] ; then
         done
 
         ip=`python -c "import socket; print(sorted(socket.gethostbyname_ex('$node')[2])[0])"`
-        # TODO: define and pass SDS options
-        sds_opts="sio_name=>'$node', ips=>'$ip', ip_roles=>'all', protection_domain=>'$pd', storage_pools=>'$sps', device_paths=>'$DevicePaths'"
+        sds_opts="sio_name=>'$node', protection_domain=>'$pd'"
+        if [[ -n "$storage_pools_list" && -n "$device_paths_list" ]] ;then
+          sds_opts+=", storage_pools=>'$storage_pools_list', device_paths=>'$device_paths_list'"
+        fi
         if [[ -n "$RFCacheDevices" ]] ; then
           sds_opts+=", rfcache_devices=>'$RFCacheDevices'"
         fi
+        # TODO: define and pass SDS IP options
+        sds_opts+=", ips=>'$ip', ip_roles=>'all'"
         cluster-cmd "scaleio::sds { '$node': $sds_opts }"
       fi
     done
