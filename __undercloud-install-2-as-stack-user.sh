@@ -15,7 +15,7 @@ mgmt_ip="192.168.$addr"
 cp /usr/share/instack-undercloud/undercloud.conf.sample ~/undercloud.conf
 cat << EOF >> undercloud.conf
 [DEFAULT]
-local_ip = $prov_ip.1/24
+local_ip = $prov_ip.2/24
 undercloud_public_vip = $prov_ip.10
 undercloud_admin_vip = $prov_ip.11
 local_interface = $NETDEV
@@ -23,7 +23,7 @@ masquerade_network = $prov_ip.0/24
 dhcp_start = $prov_ip.100
 dhcp_end = $prov_ip.120
 network_cidr = $prov_ip.0/24
-network_gateway = $prov_ip.1
+network_gateway = $prov_ip.2
 discovery_iprange = $prov_ip.130,$prov_ip.150
 EOF
 
