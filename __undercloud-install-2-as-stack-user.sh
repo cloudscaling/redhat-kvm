@@ -10,6 +10,7 @@ SKIP_SSH_TO_HOST_KEY=${SKIP_SSH_TO_HOST_KEY:-'no'}
 prov_ip="192.168.$addr"
 ((addr=172+NUM*10))
 mgmt_ip="192.168.$addr"
+dns_nameserver="8.8.8.8"
 
 # create undercloud configuration file. all IP addresses are relevant to create_env.sh script
 cp /usr/share/instack-undercloud/undercloud.conf.sample ~/undercloud.conf
@@ -61,7 +62,7 @@ cd ..
 
 # update undercloud's network information
 sid=`neutron subnet-list | grep " $prov_ip.0" | awk '{print $2}'`
-neutron subnet-update $sid --dns-nameserver $mgmt_ip.1
+neutron subnet-update $sid --dns-nameserver $dns_nameserver
 
 mkdir -p .ssh
 cat <<EOF >.ssh/config
