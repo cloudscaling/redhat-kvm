@@ -53,7 +53,20 @@ if [[ "$role" == "controller" ]] ; then
 
     server-cmd "class { 'scaleio::gateway_server': mdm_ips=>'$ips' }"
 
-    # TODO: investigate networks definitions
+    # TODO: investigate networks definitions:
+    # Internal API (OpenStack internal API, RPC, and DB):
+    #   - Nova/Cinder <==> Gateway (VIP)
+    #   - Gateway <==> MDM
+    #   - MDM <==> MDM
+    #   - SCLI <==> MDM
+    # Storage (Access to storage resources from Compute and Controller nodes):
+    #   - SDS<==>SDC (data path)
+    # Storage Management (Replication, Ceph back-end services)
+    #   SDS<==>SDS (internal network for replication, etc)
+    # External (Public OpenStack APIs, Horzizon dashboard, optionally floating IPs)
+    #   External SCLI <==> MDM
+    #   External CURL <==> Gateway
+    
     export FACTER_mdm_ips="$ips"
     # TODO: add standby mdms if needed
     #cluster-cmd "scaleio::mdm { 'mdm $node': sio_name=>'$name', ips=>'$internal_ip', role=>'$role', management_ips=>$management_ip }"
