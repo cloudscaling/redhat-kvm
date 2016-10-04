@@ -21,6 +21,11 @@ systemctl restart network
 # update OS
 yum update -y
 
+# install ntpd - it is needed for correct work of OS services
+# (particulary neutron services may not work properly)
+yum install -y ntp
+chkconfig ntp on
+
 # create stack user
 if ! grep -q 'stack' /etc/passwd ; then 
   useradd stack
