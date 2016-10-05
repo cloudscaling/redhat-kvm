@@ -12,14 +12,36 @@ parameters:
 
 resources:
 
+  ScaleIOPrepareConfig:
+    type: OS::ScaleIO::ScaleIODeploymentData
+    properties:
+      servers: {get_param: servers}
+
+  ExtraConfigFile1:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        get_file: 01_prepare_repo.sh
+  ScaleIODeployment_Step01:
+    type: OS::Heat::SoftwareDeployments
+    depends_on: ScaleIOPrepareConfig
+    properties:
+      name: ScaleIODeployment_Step01
+      servers: {get_param: servers}
+      config: {get_resource: ExtraConfigFile1}
+      input_values:
+        update_identifier: {get_param: DeployIdentifier}
+
   ExtraConfigFile2:
     type: OS::Heat::SoftwareConfig
     properties:
       group: script
       config:
-        get_file: 02_create_cluster.sh
+        get_file: 02_install_packages.sh
   ScaleIODeployment_Step02:
     type: OS::Heat::SoftwareDeployments
+    depends_on: ScaleIODeployment_Step01
     properties:
       name: ScaleIODeployment_Step02
       servers: {get_param: servers}

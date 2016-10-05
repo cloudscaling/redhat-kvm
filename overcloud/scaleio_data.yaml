@@ -5,9 +5,8 @@ description: >
 
 parameters:
 
-  server:
-    description: ID of the controller node to apply this config to
-    type: string
+  servers:
+    type: json
 
   UsePuppetsFromUpstream:
     type: boolean
@@ -132,7 +131,7 @@ resources:
       - name: RMCacheCachedPools
       - name: RFCacheDevices
       - name: RFCacheCachedPools
-
+      
       config: |
         #!/bin/bash -e
         FILE='/etc/scaleio.env'
@@ -158,9 +157,9 @@ resources:
 
 
   ScaleIODeploymentData:
-    type: OS::Heat::SoftwareDeployment
+    type: OS::Heat::SoftwareDeployments
     properties:
-      server: {get_param: server}
+      servers:  {get_param: servers}
       config: {get_resource: ScaleIOConfigData}
       input_values:
         UsePuppetsFromUpstream: {get_param: UsePuppetsFromUpstream}
