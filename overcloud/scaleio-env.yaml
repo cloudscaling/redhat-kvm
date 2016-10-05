@@ -1,10 +1,7 @@
 resource_registry:
-  OS::ScaleIO::ScaleIODeploymentData: scaleio_data.yaml
+  OS::ScaleIO::ScaleIODeploymentData: scaleio-data.yaml
 
-  # looks like this task comes before ExtraConfigPost for controllers
-  #OS::TripleO::Tasks::ControllerPostPuppet: ???
-
-  OS::TripleO::NodeExtraConfigPost: scaleio.yaml
+  OS::TripleO::AllNodesExtraConfig: scaleio.yaml
 
 parameter_defaults:
 

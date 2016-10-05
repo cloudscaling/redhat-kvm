@@ -106,7 +106,6 @@ parameters:
     default: ""
     description: "List of Storage pools which should be cached on SSD."
 
-
 resources:
   ScaleIOConfigData:
     type: OS::Heat::SoftwareConfig
@@ -131,7 +130,7 @@ resources:
       - name: RMCacheCachedPools
       - name: RFCacheDevices
       - name: RFCacheCachedPools
-      
+
       config: |
         #!/bin/bash -e
         FILE='/etc/scaleio.env'
@@ -154,7 +153,6 @@ resources:
         echo "export RMCacheCachedPools='$RMCacheCachedPools'" >> $FILE
         echo "export RFCacheDevices='$RFCacheDevices'" >> $FILE
         echo "export RFCacheCachedPools='$RFCacheCachedPools'" >> $FILE
-
 
   ScaleIODeploymentData:
     type: OS::Heat::SoftwareDeployments
@@ -181,4 +179,7 @@ resources:
         RFCacheDevices: {get_param: RFCacheDevices}
         RFCacheCachedPools: {get_param: RFCacheCachedPools}
 
-
+outputs:
+  servers:
+    description: All server for ScaleIO deployment
+    value: {get_param: servers}

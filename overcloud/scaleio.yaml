@@ -4,7 +4,15 @@ description: >
   Extra ScaleIO configuration
 
 parameters:
-  servers:
+  controller_servers:
+    type: json
+  compute_servers:
+    type: json
+  blockstorage_servers:
+    type: json
+  objectstorage_servers:
+    type: json
+  cephstorage_servers:
     type: json
   DeployIdentifier:
     type: string
@@ -14,8 +22,14 @@ resources:
 
   ScaleIOPrepareConfig:
     type: OS::ScaleIO::ScaleIODeploymentData
+    depends_on: AllServers
     properties:
-      servers: {get_param: servers}
+      servers:
+        list_join:
+          - ''
+          - - {get_param: controller_servers}
+            - {get_param: compute_servers}
+            - {get_param: blockstorage_servers}
 
   ExtraConfigFile1:
     type: OS::Heat::SoftwareConfig
@@ -28,7 +42,7 @@ resources:
     depends_on: ScaleIOPrepareConfig
     properties:
       name: ScaleIODeployment_Step01
-      servers: {get_param: servers}
+      servers: {get_attr: [ScaleIOPrepareConfig, servers]}
       config: {get_resource: ExtraConfigFile1}
       input_values:
         update_identifier: {get_param: DeployIdentifier}
@@ -44,7 +58,7 @@ resources:
     depends_on: ScaleIODeployment_Step01
     properties:
       name: ScaleIODeployment_Step02
-      servers: {get_param: servers}
+      servers: {get_attr: [ScaleIOPrepareConfig, servers]}
       config: {get_resource: ExtraConfigFile2}
       input_values:
         update_identifier: {get_param: DeployIdentifier}
@@ -60,7 +74,7 @@ resources:
     depends_on: ScaleIODeployment_Step02
     properties:
       name: ScaleIODeployment_Step03
-      servers: {get_param: servers}
+      servers: {get_attr: [ScaleIOPrepareConfig, servers]}
       config: {get_resource: ExtraConfigFile3}
       input_values:
         update_identifier: {get_param: DeployIdentifier}
