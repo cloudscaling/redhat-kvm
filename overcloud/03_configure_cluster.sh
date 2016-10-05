@@ -66,7 +66,7 @@ if [[ "$role" == "controller" ]] ; then
     # External (Public OpenStack APIs, Horzizon dashboard, optionally floating IPs)
     #   External SCLI <==> MDM
     #   External CURL <==> Gateway
-    
+
     export FACTER_mdm_ips="$ips"
     # TODO: add standby mdms if needed
     #cluster-cmd "scaleio::mdm { 'mdm $node': sio_name=>'$name', ips=>'$internal_ip', role=>'$role', management_ips=>$management_ip }"
