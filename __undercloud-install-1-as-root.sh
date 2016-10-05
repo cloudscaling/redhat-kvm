@@ -13,9 +13,9 @@ SKIP_SSH_TO_HOST_KEY=${SKIP_SSH_TO_HOST_KEY:-'no'}
 echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
 sysctl -p /etc/sysctl.conf
 # set static hostname
-hostnamectl set-hostname myhost.mydomain
-hostnamectl set-hostname --transient myhost.mydomain
-echo "127.0.0.1   localhost myhost myhost.mydomain" > /etc/hosts
+hostnamectl set-hostname myhost.my${NUM}domain
+hostnamectl set-hostname --transient myhost.my${NUM}domain
+echo "127.0.0.1   localhost myhost myhost.my${NUM}domain" > /etc/hosts
 systemctl restart network
 
 # update OS

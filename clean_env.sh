@@ -21,3 +21,6 @@ for (( i=1; i<=10; i++ )) ; do
   delete_volume overcloud-$NUM-stor-$i.qcow2 $poolname
   delete_volume overcloud-$NUM-stor-$i-store.qcow2 $poolname
 done
+
+grep -v "my${NUM}domain" /home/stack/.ssh/authorized_keys > /home/stack/.ssh/authorized_keys_f
+mv /home/stack/.ssh/authorized_keys_f /home/stack/.ssh/authorized_keys

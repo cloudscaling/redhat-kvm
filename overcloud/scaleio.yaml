@@ -15,7 +15,7 @@ resources:
   ScaleIOPrepareConfig:
     type: OS::ScaleIO::ScaleIODeploymentData
     properties:
-      servers:  {get_param: servers}
+      servers: {get_param: servers}
 
   ExtraConfigFile1:
     type: OS::Heat::SoftwareConfig
@@ -28,7 +28,7 @@ resources:
     depends_on: ScaleIOPrepareConfig
     properties:
       name: ScaleIODeployment_Step01
-      servers:  {get_param: servers}
+      servers: {get_param: servers}
       config: {get_resource: ExtraConfigFile1}
       input_values:
         update_identifier: {get_param: DeployIdentifier}
@@ -44,7 +44,7 @@ resources:
     depends_on: ScaleIODeployment_Step01
     properties:
       name: ScaleIODeployment_Step02
-      servers:  {get_param: servers}
+      servers: {get_param: servers}
       config: {get_resource: ExtraConfigFile2}
       input_values:
         update_identifier: {get_param: DeployIdentifier}
@@ -60,7 +60,7 @@ resources:
     depends_on: ScaleIODeployment_Step02
     properties:
       name: ScaleIODeployment_Step03
-      servers:  {get_param: servers}
+      servers: {get_param: servers}
       config: {get_resource: ExtraConfigFile3}
       input_values:
         update_identifier: {get_param: DeployIdentifier}
