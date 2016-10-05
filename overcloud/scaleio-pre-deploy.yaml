@@ -13,7 +13,7 @@ resources:
   ScaleIOPrepareConfig:
     type: OS::ScaleIO::ScaleIODeploymentData
     properties:
-      servers: [{get_param: server}]
+      server: {get_param: server}
 
   ExtraConfigFile:
     type: OS::Heat::SoftwareConfig
@@ -28,7 +28,7 @@ resources:
     properties:
       name: ScaleIODeployment_InstallPackages
       config: {get_resource: ExtraConfigFile}
-      server: {get_param: servers}
+      server: {get_param: server}
 
 outputs:
   deploy_stdout:

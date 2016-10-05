@@ -12,11 +12,6 @@ parameters:
 
 resources:
 
-  ScaleIOPrepareConfig:
-    type: OS::ScaleIO::ScaleIODeploymentData
-    properties:
-      servers: {get_param: servers}
-
   ExtraConfigFile2:
     type: OS::Heat::SoftwareConfig
     properties:
