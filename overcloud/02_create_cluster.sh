@@ -20,7 +20,7 @@ function cluster-cmd() {
 }
 
 name="$(hostname)"
-internal_ip=`awk "/${name}-internalapi$\$/ {print(\$1)}" /etc/hosts`
+internal_ip=`grep "${name}-internalapi$" /etc/hosts | awk '{print($1)}'`
 
 # next code must be idempotent!!!
 if ! scli --query_cluster --approve_certificate ; then
