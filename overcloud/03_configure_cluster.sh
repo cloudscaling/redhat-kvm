@@ -67,9 +67,6 @@ if [[ "$gateway_vip" != 'nil' ]] ; then
   server-cmd "haproxy::balancermember { 'scaleio-gateway': ${balance_opts} }"
 fi
 
-# TODO: add standby mdms if needed
-#cluster-cmd "scaleio::mdm { 'mdm $node': sio_name=>'$name', ips=>'$internal_ip', role=>'$role', management_ips=>$management_ip }"
-
 # Register protection domains and storage pools
 protection_domains_array=($(echo ${ProtectionDomain:-''} | sed 's/,/ /g'))
 storage_pools_list=${StoragePools:-''}

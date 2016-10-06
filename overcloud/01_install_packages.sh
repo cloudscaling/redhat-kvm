@@ -52,10 +52,8 @@ function server-cmd() {
 
 if [[ "$role" == "controller" ]] ; then
 
-  internal_ip=$(awk "/${name}-internalapi$\$/ {print(\$1)}" /etc/hosts)
+  cloud_name=$(hostname | cut -d '-' -f 1)
   controllers_count=$(grep -c "${cloud_name}-controller-[0-9]\+-internalapi$" /etc/hosts)
-  #TODO: node replacement is not supported!!!
-  first_controller_index=0
   if (( $controllers_count < 3 )) ; then
     managers_count=1
   elif (( $controllers_count < 5 )) ; then
@@ -63,6 +61,9 @@ if [[ "$role" == "controller" ]] ; then
   else
     managers_count=3
   fi
+  #TODO: node replacement is not supported!!!
+  first_controller_index=0
+  node_index=$(hostname | cut -d '-' -f 3)
   if (( $node_index - $first_controller_index < $managers_count )) ; then
     is_manager=1
   else
