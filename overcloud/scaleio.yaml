@@ -73,7 +73,7 @@ resources:
     type: OS::Heat::SoftwareDeployment
     depends_on: [ScaleIODeployment_Step01Controller, ScaleIODeployment_Step01Compute, ScaleIODeployment_Step01BlockStorage]
     properties:
-      server: {get_param: [controller_servers, 0]}
+      server: {get_param: [controller_servers, '0']}
       config: {get_resource: ExtraConfigFile2}
 
   ExtraConfigFile3:
@@ -86,7 +86,7 @@ resources:
     type: OS::Heat::SoftwareDeployment
     depends_on: ScaleIODeployment_Step02
     properties:
-      server: {get_param: [controller_servers, 0]}
+      server: {get_param: [controller_servers, '0']}
       config: {get_resource: ExtraConfigFile3}
 
   # TODO: configure SDC, configure OpenStack services

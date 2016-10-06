@@ -45,7 +45,7 @@ function is_in_list() {
 
 # NOTE: at this moment all nodes was installed and we can configure cluster
 cloud_name=$(hostname | cut -d '-' -f 1)
-controllers_internal_ips=$(awk "/${cloud_name}-controller-[0-9]+-internalapi$/ {print(\$1)}" /etc/hosts | tr '\r\n' ',' | sed 's/,$//g')
+controllers_internal_ips=`awk "/${cloud_name}-controller-[0-9]+-internalapi$/ {print(\$1)}" /etc/hosts | tr '\r\n' ',' | sed 's/,$//g'`
 export FACTER_mdm_ips="$controllers_internal_ips"
 
 # Configure Gateway HA
