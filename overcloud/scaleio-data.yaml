@@ -153,9 +153,10 @@ resources:
         echo "export RMCacheCachedPools='$RMCacheCachedPools'" >> $FILE
         echo "export RFCacheDevices='$RFCacheDevices'" >> $FILE
         echo "export RFCacheCachedPools='$RFCacheCachedPools'" >> $FILE
+        cat $FILE
 
   ScaleIODeploymentData:
-    type: OS::Heat::SoftwareDeployments
+    type: OS::Heat::SoftwareDeploymentGroup
     properties:
       servers:  {get_param: servers}
       config: {get_resource: ScaleIOConfigData}
@@ -180,6 +181,6 @@ resources:
         RFCacheCachedPools: {get_param: RFCacheCachedPools}
 
 outputs:
-  servers:
-    description: All server for ScaleIO deployment
-    value: {get_param: servers}
+  output:
+    description: Output for config_identifier
+    value: {get_attr: [ScaleIODeploymentData, deploy_stdouts, 0]}
