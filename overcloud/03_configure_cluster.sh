@@ -39,26 +39,50 @@ function is_in_list() {
   return 1
 }
 
+#TODO: node replacement is not supported!!!
+first_controller_index=0
+
 cloud_name=$(hostname | cut -d '-' -f 1)
 
 # these variable are a comma separated list
-names="$(hiera controller_node_names)"
+controllers_names="$(hiera controller_node_names)"
 controllers_internal_ips=$(awk "/${cloud_name}-controller-[0-9]+-internalapi$/ {print(\$1)}" /etc/hosts | tr '\r\n' ',' | sed 's/,$//g')
 
+gateway_vip=$(hiera 'tripleo::loadbalancer::internal_api_virtual_ip')
+is_ha_enabled='true'
+if [[ "$gateway_vip" == 'nil' ]] ; then
+  gateway_vip=$(awk "/${cloud_name}-controller-${first_controller_index}-internalapi$\$/ {print(\$1)}" /etc/hosts)
+  is_ha_enabled='false'
+fi
 
 role=$(hostname | cut -d '-' -f 2)
 if [[ "$role" == "controller" ]] ; then
 
   node_suffix=$(hostname | cut -d '-' -f 3)
-  # TODO: get index of node by suffix from $names
+  # TODO: get index of node by suffix from $controllers_names
   node_index="$node_suffix"
-  if [[ $node_index == 0 ]] ; then
+  if [[ $node_index == $first_controller_index ]] ; then
 
     # NOTE: at this moment all nodes was installed and we can configure cluster
     export FACTER_mdm_ips="$controllers_internal_ips"
     
-    # Install and configure Gateways
+    # Configure Gateways and HA
     server-cmd "class { 'scaleio::gateway_server': mdm_ips=>'$controllers_internal_ips' }"
+    if [[ "$is_ha_enabled" == 'true' ]] ; then
+      api_port=${GatewayPort:-4443}
+      listen_opts="bind => { '${gateway_vip}:${api_port}' => [], }"
+      listen_opts+=", options => { 'balance' => 'roundrobin', 'mode' => 'tcp', 'option' => ['tcplog'], }"
+      listen_opts+=", collect_exported => false"
+      server-cmd "haproxy::listen { 'scaleio-gateway': ${listen_opts} }"
+      balance_opts="listening_service => 'scaleio-gateway'"
+      balance_opts+=", ports => '${api_port}'"
+      ipaddresses="'$(echo $controllers_internal_ips | sed 's/,/'\'','\''/g')'"
+      balance_opts+=", ipaddresses => [$ipaddresses]"
+      server_names="'$(echo $controllers_names | sed 's/,/'\'','\''/g')'"
+      balance_opts+=", server_names => [$server_names]"
+      balance_opts+=", options => 'check inter 10s fastinter 2s downinter 3s rise 3 fall 3'"
+      server-cmd "haproxy::balancermember { 'scaleio-gateway': ${balance_opts} }"
+    fi
 
     # TODO: add standby mdms if needed
     #cluster-cmd "scaleio::mdm { 'mdm $node': sio_name=>'$name', ips=>'$internal_ip', role=>'$role', management_ips=>$management_ip }"
