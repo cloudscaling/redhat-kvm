@@ -73,8 +73,7 @@ if [[ "$role" == "controller" ]] ; then
   server-cmd "class { 'scaleio::mdm_server': is_manager=>$is_manager }"
 
   api_port=${GatewayPort:-4443}
-  controllers_internal_ips=$(awk "/${cloud_name}-controller-[0-9]+-internalapi$/ {print(\$1)}" /etc/hosts | tr '\r\n' ',' | sed 's/,$//g')
-  server-cmd "class { 'scaleio::gateway_server': port=>'$api_port', mdm_ips=>'$controllers_internal_ips' }"
+  server-cmd "class { 'scaleio::gateway_server': port=>'$api_port' }"
 
   server-cmd "class { 'scaleio::gui_server': }"
 

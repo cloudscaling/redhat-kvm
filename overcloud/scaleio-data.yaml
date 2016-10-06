@@ -179,8 +179,3 @@ resources:
         RMCacheCachedPools: {get_param: RMCacheCachedPools}
         RFCacheDevices: {get_param: RFCacheDevices}
         RFCacheCachedPools: {get_param: RFCacheCachedPools}
-
-outputs:
-  output:
-    description: Output for config_identifier
-    value: {get_attr: [ScaleIODeploymentData, deploy_stdouts, 0]}

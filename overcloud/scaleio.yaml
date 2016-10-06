@@ -73,6 +73,7 @@ resources:
     type: OS::Heat::SoftwareDeployment
     depends_on: [ScaleIODeployment_Step01Controller, ScaleIODeployment_Step01Compute, ScaleIODeployment_Step01BlockStorage]
     properties:
+      # TODO: run it on all controllers to add all MDM's to cluster
       server: {get_param: [controller_servers, '0']}
       config: {get_resource: ExtraConfigFile2}
 
@@ -89,11 +90,48 @@ resources:
       server: {get_param: [controller_servers, '0']}
       config: {get_resource: ExtraConfigFile3}
 
-  # TODO: configure SDC, configure OpenStack services
+  ExtraConfigFile4:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        get_file: 04_configure_controllers.sh
+  ScaleIODeployment_Step04:
+    type: OS::Heat::SoftwareDeploymentGroup
+    depends_on: ScaleIODeployment_Step03
+    properties:
+      server: {get_param: controller_servers}
+      config: {get_resource: ExtraConfigFile4}
 
-
-outputs:
-  # This value should change if the configuration data has changed
-  # It is used to e.g re-apply puppet after hieradata values change.
-  config_identifier:
-    value: {get_attr: [ScaleIOPrepareConfigController, output]}
+  ExtraConfigFile5:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      inputs:
+      - name: role
+      config:
+        get_file: 05_configure_clients.sh
+  ScaleIODeployment_Step05Controller:
+    type: OS::Heat::SoftwareDeploymentGroup
+    depends_on: ScaleIODeployment_Step04
+    properties:
+      server: {get_param: controller_servers}
+      config: {get_resource: ExtraConfigFile5}
+      input_values:
+        role: controller
+  ScaleIODeployment_Step05Compute:
+    type: OS::Heat::SoftwareDeploymentGroup
+    depends_on: ScaleIODeployment_Step04
+    properties:
+      server: {get_param: compute_servers}
+      config: {get_resource: ExtraConfigFile5}
+      input_values:
+        role: compute
+  ScaleIODeployment_Step05BlockStorage:
+    type: OS::Heat::SoftwareDeploymentGroup
+    depends_on: ScaleIODeployment_Step04
+    properties:
+      server: {get_param: blockstorage_servers}
+      config: {get_resource: ExtraConfigFile5}
+      input_values:
+        role: blockstorage
