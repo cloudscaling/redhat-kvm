@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# Network mapping:
+#   1. Internal API (OpenStack internal API, RPC, and DB):
+#     - MDM/SDS/SDC <==> MDM
+#     - Gateway <==> MDM
+#     - SCLI <==> MDM
+#   2. Storage (Access to storage resources from Compute and Controller nodes):
+#     - SDS<==>SDC (data path)
+#   3. Storage Management (Replication, Ceph back-end services)
+#     - SDS<==>SDS (internal network for replication, etc)
+#   4. Internal API VIP
+#     - Nova/Cinder <==> Gateway (VIP)
+
+
 source /etc/scaleio.env
 
 if [[ "$UsePuppetsFromUpstream" == "True" ]] ; then
@@ -33,23 +46,20 @@ function cluster-cmd() {
 role=$(hostname | cut -d '-' -f 2)
 if [[ "$role" == "controller" ]] ; then
 
-  # these variable are a comma separated list
-  ips="$(hiera controller_node_ips)"
-  names="$(hiera controller_node_names)"
-
   name="$(hostname)"
-  # TODO: investigate networks definitions
-  internal_ip="$ips"
-  management_ip="$ips"
+  internal_ip=$(awk "/${name}-internalapi$\$/ {print(\$1)}" /etc/hosts)
 
   node_suffix=$(hostname | cut -d '-' -f 3)
+  
   # TODO: get index of node by $name from $names
+  #names="$(hiera controller_node_names)"   # these variable are a comma separated list
   node_index="$node_suffix"
   if [[ $node_index == 0 ]] ; then
 
+
     # next code must be idempotent!!!
     if ! scli --query_cluster --approve_certificate ; then
-      server-cmd "class { 'scaleio::mdm_server': master_mdm_name=>'$name', mdm_ips=>'$internal_ip', is_manager=>1, mdm_management_ips=>'$management_ip' }"
+      server-cmd "class { 'scaleio::mdm_server': master_mdm_name=>'$name', mdm_ips=>'$internal_ip', is_manager=>1 }"
       server-cmd "scaleio::login { 'first login': password=>'admin' }"
       server-cmd "scaleio::cluster { 'cluster': password=>'admin', new_password=>'$ScaleIOAdminPassword' }"
       cluster-cmd "scaleio::cluster { 'cluster': client_password=>'$ScaleIOClientPassword' }"
