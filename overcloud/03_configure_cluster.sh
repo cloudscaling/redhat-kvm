@@ -111,29 +111,4 @@ for node in $nodes ; do
     fi
     cluster-cmd "scaleio::sds { '$node': $sds_opts }"
   fi
-  if [[ -n "$fault_sets_list" ]] ; then
-    fss="'$(echo $fault_sets_list | sed 's/,/'\'','\''/g')'"
-    pd_opts+=", fault_sets=>[$fss]"
-  fi
-  cluster-cmd "scaleio::protection_domain { 'protection domain $pd': $pd_opts }"
-  for sp in ${storage_pools_array[@]} ; do
-    sp_opts="sio_name=>'$sp', protection_domain=>'$pd', checksum_mode=>"
-    if [[ $ChecksumMode == "True" ]] ; then sp_opts+="'enable'"; else sp_opts+="'disable'"; fi
-    sp_opts+=", scanner_mode=>"
-    if [[ $ScannerMode == "True" ]] ; then sp_opts+="'enable'"; else sp_opts+="'disable'"; fi
-    sp_opts+=", zero_padding_policy=>"
-    if [[ $ZeroPadding == "True" ]] ; then sp_opts+="'enable'"; else sp_opts+="'disable'"; fi
-    sp_opts+=", spare_percentage=>$SparePolicy"
-    sp_opts+=", rfcache_usage=>"
-    if is_in_list $sp "$RFCacheCachedPools" ; then sp_opts+="'use'"; else sp_opts+="'dont_use'"; fi
-    sp_opts+=", rmcache_usage=>"
-    if is_in_list $sp "$RMCacheCachedPools" ; then
-      sp_opts+="'use', rmcache_write_handling_mode=>'cached'"
-    elif is_in_list $sp "$RMCachePassthroughPools" ; then
-      sp_opts+="'use', rmcache_write_handling_mode=>'passthrough'"
-    else
-      sp_opts+="'dont_use'"
-    fi
-    cluster-cmd "scaleio::storage_pool { 'storage pool $sp': $sp_opts }"
-  done
 done
