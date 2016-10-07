@@ -12,7 +12,7 @@ function server-cmd() {
 }
 
 cloud_name=$(hostname | cut -d '-' -f 1)
-controllers_internal_ips=`grep "${cloud_name}-controller-[0-9]+-internalapi$" /etc/hosts | awk '{print($1)}' | tr '\r\n' ',' | sed 's/,$//g'`
+controllers_internal_ips=`grep "${cloud_name}-controller-[0-9]\+-internalapi$" /etc/hosts | awk '{print($1)}' | tr '\r\n' ',' | sed 's/,$//g'`
 
 api_port=${GatewayPort:-4443}
 server-cmd "class { 'scaleio::gateway_server': port=>'$api_port', mdm_ips=>'$controllers_internal_ips' }"
