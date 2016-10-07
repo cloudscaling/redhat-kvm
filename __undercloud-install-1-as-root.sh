@@ -56,3 +56,8 @@ openstack-config --set /etc/nova/nova.conf DEFAULT rpc_response_timeout 600
 openstack-config --set /etc/ironic/ironic.conf DEFAULT rpc_response_timeout 600
 openstack-service restart nova
 openstack-service restart ironic
+
+# patch tripleo templates
+if patch -p 1 -i /root/tripleo.mitaka.diff -d /usr/share/openstack-tripleo-heat-templates/ -b -f --dry-run ; then
+  patch -p 1 -i /root/tripleo.mitaka.diff -d /usr/share/openstack-tripleo-heat-templates/ -b
+fi

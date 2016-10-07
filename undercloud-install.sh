@@ -21,7 +21,7 @@ while ! scp $ssh_opts -B $IMAGES ${ssh_addr}:/tmp/images.tar ; do
   sleep 30
 done
 
-for fff in __undercloud-install-1-as-root.sh __undercloud-install-2-as-stack-user.sh ; do
+for fff in __undercloud-install-1-as-root.sh __undercloud-install-2-as-stack-user.sh tripleo.mitaka.diff ; do
   scp $ssh_opts -B $fff ${ssh_addr}:/root/$fff
 done
 ssh -t $ssh_opts $ssh_addr "NUM=$NUM NETDEV=$NETDEV SKIP_SSH_TO_HOST_KEY=$SKIP_SSH_TO_HOST_KEY /root/__undercloud-install-1-as-root.sh"

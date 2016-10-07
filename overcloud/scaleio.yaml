@@ -100,7 +100,7 @@ resources:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIODeployment_Step03
     properties:
-      server: {get_param: controller_servers}
+      servers: {get_param: controller_servers}
       config: {get_resource: ExtraConfigFile4}
 
   ExtraConfigFile5:
@@ -115,7 +115,7 @@ resources:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIODeployment_Step04
     properties:
-      server: {get_param: controller_servers}
+      servers: {get_param: controller_servers}
       config: {get_resource: ExtraConfigFile5}
       input_values:
         role: controller
@@ -123,7 +123,7 @@ resources:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIODeployment_Step04
     properties:
-      server: {get_param: compute_servers}
+      servers: {get_param: compute_servers}
       config: {get_resource: ExtraConfigFile5}
       input_values:
         role: compute
@@ -131,7 +131,7 @@ resources:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIODeployment_Step04
     properties:
-      server: {get_param: blockstorage_servers}
+      servers: {get_param: blockstorage_servers}
       config: {get_resource: ExtraConfigFile5}
       input_values:
         role: blockstorage
