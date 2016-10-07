@@ -1,7 +1,11 @@
 #!/bin/bash -e
 
 # common setting from create_env.sh
-NUM=${NUM:-0}
+if [[ -z "$NUM" ]] ; then
+  echo "Please set NUM variable to specific environment number. (export NUM=4)"
+  exit 1
+fi
+
 SSH_VIRT_TYPE=${VIRT_TYPE:-'virsh'}
 BASE_ADDR=${BASE_ADDR:-172}
 MEMORY=${MEMORY:-8192}

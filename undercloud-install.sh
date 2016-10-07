@@ -3,7 +3,11 @@
 # NOTE: installs Mitaka version
 
 # common setting from create_env.sh
-NUM=${NUM:-0}
+if [[ -z "$NUM" ]] ; then
+  echo "Please set NUM variable to specific environment number. (export NUM=4)"
+  exit 1
+fi
+
 BASE_ADDR=${BASE_ADDR:-172}
 IMAGES=${IMAGES:-'/home/stack/images.tar'}
 NETDEV=${NETDEV:-'eth1'}
