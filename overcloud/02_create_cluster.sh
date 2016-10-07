@@ -23,7 +23,7 @@ internal_ip=`grep "${name}-internalapi$" /etc/hosts | awk '{print($1)}'`
 
 # NOTE: this code should be run only on master
 # next code must be idempotent!!!
-if ! scli --query_cluster --approve_certificate ; then
+if ! scli --query_cluster --approve_certificate 2>/dev/null; then
   server-cmd "class { 'scaleio::mdm_server': master_mdm_name=>'$name', mdm_ips=>'$internal_ip', is_manager=>1 }"
   server-cmd "scaleio::login { 'first login': password=>'admin' }"
   server-cmd "scaleio::cluster { 'cluster': password=>'admin', new_password=>'$ScaleIOAdminPassword' }"
