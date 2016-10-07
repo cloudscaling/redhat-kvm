@@ -26,6 +26,8 @@ for (( i=1; i<=10; i++ )) ; do
 done
 
 grep -v "my${NUM}domain" /home/stack/.ssh/authorized_keys > /home/stack/.ssh/authorized_keys_f
+chown stack:stack /home/stack/.ssh/authorized_keys_f
+chmod 600 /home/stack/.ssh/authorized_keys_f
 mv /home/stack/.ssh/authorized_keys_f /home/stack/.ssh/authorized_keys
 
 rm -f "$my_dir/kp-$NUM" "$my_dir/kp-$NUM.pub"
