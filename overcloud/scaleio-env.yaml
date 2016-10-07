@@ -1,7 +1,7 @@
 resource_registry:
   OS::ScaleIO::ScaleIODeploymentData: scaleio-data.yaml
 
-  OS::TripleO::AllNodesExtraConfig: scaleio.yaml
+  OS::TripleO::AllNodesExtraConfigPost: scaleio.yaml
 
 parameter_defaults:
 
