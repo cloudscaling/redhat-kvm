@@ -25,6 +25,7 @@ yum update -y
 # (particulary neutron services may not work properly)
 yum install -y ntp
 chkconfig ntpd on
+service ntpd start
 
 # create stack user
 if ! grep -q 'stack' /etc/passwd ; then 
