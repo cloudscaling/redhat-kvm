@@ -14,6 +14,9 @@ parameters:
     type: json
   cephstorage_servers:
     type: json
+  public_vip:
+    type: string
+    default: ''
 
 resources:
 
@@ -94,6 +97,8 @@ resources:
     type: OS::Heat::SoftwareConfig
     properties:
       group: script
+      inputs:
+      - name: public_vip
       config:
         get_file: 04_configure_controllers.sh
   ScaleIODeployment_Step04:
@@ -102,6 +107,8 @@ resources:
     properties:
       servers: {get_param: controller_servers}
       config: {get_resource: ExtraConfigFile4}
+      input_values:
+        public_vip: {get_param: public_vip}
 
   ExtraConfigFile5:
     type: OS::Heat::SoftwareConfig
@@ -109,6 +116,7 @@ resources:
       group: script
       inputs:
       - name: role
+      - name: public_vip
       config:
         get_file: 05_configure_clients.sh
   ScaleIODeployment_Step05Controller:
@@ -119,6 +127,7 @@ resources:
       config: {get_resource: ExtraConfigFile5}
       input_values:
         role: controller
+        public_vip: {get_param: public_vip}
   ScaleIODeployment_Step05Compute:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIODeployment_Step04
@@ -127,6 +136,7 @@ resources:
       config: {get_resource: ExtraConfigFile5}
       input_values:
         role: novacompute
+        public_vip: {get_param: public_vip}
   ScaleIODeployment_Step05BlockStorage:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIODeployment_Step04
@@ -135,3 +145,4 @@ resources:
       config: {get_resource: ExtraConfigFile5}
       input_values:
         role: blockstorage
+        public_vip: {get_param: public_vip}

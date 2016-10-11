@@ -1,15 +1,8 @@
 diff --git a/overcloud-resource-registry-puppet.yaml b/overcloud-resource-registry-puppet.yaml
-index 54074d1..94569e2 100644
+index 54074d1..f7ccf04 100644
 --- a/overcloud-resource-registry-puppet.yaml
 +++ b/overcloud-resource-registry-puppet.yaml
-@@ -46,12 +46,15 @@ resource_registry:
-   OS::TripleO::NodeExtraConfig: puppet/extraconfig/pre_deploy/default.yaml
-   OS::TripleO::NodeExtraConfigPost: extraconfig/post_deploy/default.yaml
- 
--  # "AllNodes" Extra cluster config, runs on all nodes prior to the post_deploy
-+  # "AllNodes" Extra cluster config, runs on all nodes after the post_deploy
-   # phase, e.g when puppet is applied, but after the pre_deploy phase.  Useful when
-   # configuration with knowledge of all nodes in the cluster is required vs single
+@@ -52,6 +52,9 @@ resource_registry:
    # node configuration in the pre_deploy step.
    OS::TripleO::AllNodesExtraConfig: extraconfig/all_nodes/default.yaml
  
@@ -20,10 +13,10 @@ index 54074d1..94569e2 100644
    OS::TripleO::Network: network/networks.yaml
    OS::TripleO::VipConfig: puppet/vip-config.yaml
 diff --git a/overcloud.yaml b/overcloud.yaml
-index ae1d6e7..5b72e65 100644
+index ae1d6e7..caedd94 100644
 --- a/overcloud.yaml
 +++ b/overcloud.yaml
-@@ -1701,6 +1701,23 @@ resources:
+@@ -1701,6 +1701,24 @@ resources:
          cephstorage_config: {get_attr: [CephStorage, attributes, config_identifier]}
          deployment_identifier: {get_param: DeployIdentifier}
  
@@ -43,6 +36,7 @@ index ae1d6e7..5b72e65 100644
 +      blockstorage_servers: {get_attr: [BlockStorage, attributes, nova_server_resource]}
 +      objectstorage_servers: {get_attr: [ObjectStorage, attributes, nova_server_resource]}
 +      cephstorage_servers: {get_attr: [CephStorage, attributes, nova_server_resource]}
++      public_vip: {get_attr: [VipMap, net_ip_map, external]}
 +
  outputs:
    KeystoneURL:
