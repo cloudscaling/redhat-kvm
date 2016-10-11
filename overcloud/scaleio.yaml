@@ -53,7 +53,7 @@ resources:
       servers: {get_param: compute_servers}
       config: {get_resource: ExtraConfigFile1}
       input_values:
-        role: compute
+        role: novacompute
   ScaleIODeployment_Step01BlockStorage:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIOPrepareConfigBlockStorage
@@ -126,7 +126,7 @@ resources:
       servers: {get_param: compute_servers}
       config: {get_resource: ExtraConfigFile5}
       input_values:
-        role: compute
+        role: novacompute
   ScaleIODeployment_Step05BlockStorage:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIODeployment_Step04
