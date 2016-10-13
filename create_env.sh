@@ -7,8 +7,8 @@ if [[ -z "$NUM" ]] ; then
 fi
 # number of machines in overcloud
 CONTROLLER_COUNT=${CONTROLLER_COUNT:-1}
-COMPUTE_COUNT=${COMPUTE_COUNT:-1}
-STORAGE_COUNT=${STORAGE_COUNT:-3}
+COMPUTE_COUNT=${COMPUTE_COUNT:-3}
+STORAGE_COUNT=${STORAGE_COUNT:-0}
 
 my_file="$(readlink -e "$0")"
 my_dir="$(dirname $my_file)"

@@ -11,6 +11,7 @@ parameter_defaults:
   NovaEnableRbdBackend: false
   GlanceBackend: file
 
+  RolesForSDS: novacompute
   UsePuppetsFromUpstream: true
   PackagesSourceURL: http://scaleio-packages.s3-website-us-east-1.amazonaws.com/redhat/
   DevicePaths: /dev/vdb
