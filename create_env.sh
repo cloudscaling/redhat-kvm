@@ -5,10 +5,12 @@ if [[ -z "$NUM" ]] ; then
   echo "Please set NUM variable to specific environment number. (export NUM=4)"
   exit 1
 fi
+
 # number of machines in overcloud
+# by default scripts will create hyperconverged environment with SDS on compute
 CONTROLLER_COUNT=${CONTROLLER_COUNT:-1}
 COMPUTE_COUNT=${COMPUTE_COUNT:-3}
-STORAGE_COUNT=${STORAGE_COUNT:-0}
+STORAGE_COUNT=${STORAGE_COUNT:-1}
 
 my_file="$(readlink -e "$0")"
 my_dir="$(dirname $my_file)"
@@ -41,24 +43,33 @@ ext_net=`get_network_name external`
 # create pool
 virsh pool-info $poolname &> /dev/null || create_pool $poolname
 pool_path=$(get_pool_path $poolname)
+
+function create_root_volume() {
+  name=$1
+  delete_volume $name.qcow2 $poolname
+  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/$name.qcow2 $vm_disk_size
+}
+function create_store_volume() {
+  name=$1
+  delete_volume $name-store.qcow2 $poolname
+  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/$name-store.qcow2 100G
+}
 # create volumes for overcloud machines
 for (( i=1; i<=CONTROLLER_COUNT; i++ )) ; do
   name="overcloud-$NUM-cont-$i"
-  delete_volume $name.qcow2 $poolname
-  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/$name.qcow2 $vm_disk_size
+  create_root_volume $name
 done
 for (( i=1; i<=COMPUTE_COUNT; i++ )) ; do
   name="overcloud-$NUM-comp-$i"
-  delete_volume $name.qcow2 $poolname
-  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/$name.qcow2 $vm_disk_size
+  create_root_volume $name
+  create_store_volume $name
 done
 for (( i=1 ; i<=STORAGE_COUNT; i++ )) ; do
   name="overcloud-$NUM-stor-$i"
-  delete_volume $name.qcow2 $poolname
-  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/$name.qcow2 $vm_disk_size
-  delete_volume $name-store.qcow2 $poolname
-  qemu-img create -f qcow2 -o preallocation=metadata $pool_path/$name-store.qcow2 100G
+  create_root_volume $name
+  create_store_volume $name
 done
+
 # copy image for undercloud and resize them
 cp $BASE_IMAGE $pool_path/undercloud-$NUM.qcow2
 qemu-img resize $pool_path/undercloud-$NUM.qcow2 +32G
@@ -157,7 +168,7 @@ for (( i=1; i<=CONTROLLER_COUNT; i++ )) ; do
 done
 for (( i=1; i<=COMPUTE_COUNT; i++ )) ; do
   name="overcloud-$NUM-comp-$i"
-  define-machine rd-$name "--disk path=$pool_path/$name.qcow2,device=disk,bus=virtio,format=qcow2"
+  define-machine rd-$name "--disk path=$pool_path/$name.qcow2,device=disk,bus=virtio,format=qcow2 --disk path=$pool_path/$name-store.qcow2,device=disk,bus=virtio,format=qcow2"
 done
 for (( i=1; i<=STORAGE_COUNT; i++ )) ; do
   name="overcloud-$NUM-stor-$i"
