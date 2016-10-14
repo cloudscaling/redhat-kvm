@@ -8,10 +8,10 @@ parameters:
   servers:
     type: json
 
-  UsePuppetsFromUpstream:
-    type: boolean
-    default: false
-    description: Use puppet modules from upstream instead of puppet forge.
+  PuppetsVersion:
+    type: string
+    default: "master"
+    description: Use specific puppet modules from puppet forge or use latest from upstream.
   PackagesSourceURL:
     type: string
     description: Where to get packages of ScaleIO for installation.
