@@ -93,7 +93,7 @@ device_paths_list=${DevicePaths:-''}
 nodes=`grep -o "${cloud_name}-[a-zA-Z]\+-[0-9]\+\$" /etc/hosts`
 for node in $nodes ; do
   role=$(echo $node | cut -d '-' -f 2)
-  if [[ $RolesForSDS =~ $role ]] ; then
+  if [[ "$RolesForSDS" =~ "$role" ]] ; then
     sds_opts="sio_name=>'$node', protection_domain=>'$pd'"
     if [[ -n "$storage_pools_list" && -n "$device_paths_list" ]] ;then
       sds_opts+=", storage_pools=>'$storage_pools_list', device_paths=>'$device_paths_list'"

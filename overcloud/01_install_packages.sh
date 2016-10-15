@@ -87,6 +87,6 @@ elif [[ "$role" == "blockstorage" ]] ; then
 
 fi
 
-if [[ $RolesForSDS =~ $role ]] ; then
+if [[ "$RolesForSDS" =~ "$role" ]] ; then
   server-cmd "class { 'scaleio::sds_server': ftp=>'$ScaleIODriverFTP' }"
 fi
