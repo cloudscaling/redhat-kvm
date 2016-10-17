@@ -46,7 +46,7 @@ curl -L -o /etc/yum.repos.d/delorean-deps-mitaka.repo http://trunk.rdoproject.or
 yum -y install yum-plugin-priorities python-tripleoclient python-rdomanager-oscplugin sshpass openstack-utils
 
 # another hack to avoid 'sudo: require tty' error
-#sed -i -e 's/Defaults    requiretty.*/ #Defaults    requiretty/g' /etc/sudoers
+sed -i -e 's/Defaults[ \t]*requiretty.*/#Defaults    requiretty/g' /etc/sudoers
 
 cp "$my_dir/__undercloud-install-2-as-stack-user.sh" /home/stack/
 chown stack /home/stack/__undercloud-install-2-as-stack-user.sh
