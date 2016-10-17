@@ -16,7 +16,7 @@ SKIP_SSH_TO_HOST_KEY=${SKIP_SSH_TO_HOST_KEY:-'no'}
 # on kvm host do once: create stack user, create home directory, add him to libvirtd group
 ((env_addr=BASE_ADDR+NUM*10))
 ip_addr="192.168.${env_addr}.2"
-ssh_opts="-i kp-$NUM -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+ssh_opts="-i $my_dir/kp-$NUM -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 ssh_addr="root@${ip_addr}"
 
 # wait for undercloud and copy images for overcloud to it. (images can be build manually but it's too long - use previously built images)

@@ -80,7 +80,7 @@ mgmt_mac="00:16:00:00:0$NUM:02"
 prov_ip=$(get_network_ip "provisioning")
 prov_mac="00:16:00:00:0$NUM:06"
 # generate password/key for undercloud's root
-rm -f kp-$NUM kp-$NUM.pub
+rm -f "$my_dir/kp-$NUM" "$my_dir/kp-$NUM.pub"
 ssh-keygen -b 2048 -t rsa -f "$my_dir/kp-$NUM" -q -N ""
 rootpass=`openssl passwd -1 123`
 
@@ -178,4 +178,4 @@ done
 # TODO: add timeout here
 # wait for undercloud machine
 truncate -s 0 ./tmp_file
-while ! scp -i kp-$NUM -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B ./tmp_file root@${mgmt_ip}.2:/tmp/tmp_file ; do echo "Waiting for undercloud..." ; sleep 30 ; done
+while ! scp -i "$my_dir/kp-$NUM" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B ./tmp_file root@${mgmt_ip}.2:/tmp/tmp_file ; do echo "Waiting for undercloud..." ; sleep 30 ; done

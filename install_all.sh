@@ -9,6 +9,6 @@ my_dir="$(dirname $my_file)"
 BASE_ADDR=${BASE_ADDR:-172}
 ((env_addr=BASE_ADDR+NUM*10))
 ip_addr="192.168.${env_addr}.2"
-ssh_opts="-i kp-$NUM -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+ssh_opts="-i $my_dir/kp-$NUM -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 ssh_addr="root@${ip_addr}"
 ssh -t $ssh_opts $ssh_addr "sudo -u stack NUM=$NUM DEPLOY=1 /home/stack/overcloud-install.sh"
