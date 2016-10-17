@@ -25,7 +25,7 @@ ssh_addr="root@${ip_addr}"
 # wait for undercloud and copy images for overcloud to it. (images can be build manually but it's too long - use previously built images)
 iter=0
 while ! scp $ssh_opts -B $IMAGES ${ssh_addr}:/tmp/images.tar ; do
-  if [[ $iter >= 20 ]] ; then
+  if (( iter >= 20 )) ; then
     echo "Could not connect to undercloud"
     exit 1
   fi

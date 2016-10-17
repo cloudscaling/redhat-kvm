@@ -179,7 +179,7 @@ done
 iter=0
 truncate -s 0 ./tmp_file
 while ! scp -i "$my_dir/kp-$NUM" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B ./tmp_file root@${mgmt_ip}.2:/tmp/tmp_file ; do
-  if [[ $iter >= 20 ]] ; then
+  if (( iter >= 20 )) ; then
     echo "Could not connect to undercloud"
     exit 1
   fi
