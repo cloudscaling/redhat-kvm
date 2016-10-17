@@ -150,13 +150,21 @@ openstack baremetal introspection bulk start
 tar xvf oc.tar
 echo "Next step should be an overcloud deploy..."
 
-# deploy overcloud. if you do it manually then I recommend to do it in screen.
-echo "openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-network-type vxlan --ntp-server pool.ntp.org \
-  --control-scale $CONTROLLER_COUNT --compute-scale $COMPUTE_COUNT --block-storage-scale $STORAGE_COUNT \
-  --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
-  -e overcloud/scaleio-env.yaml"
-echo Add -e templates/firstboot/firstboot.yaml if you use swap
-
+if [[ "$DEPLOY" == 1 ]] ; then
+  openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-network-type vxlan --ntp-server pool.ntp.org \
+    --control-scale $CONTROLLER_COUNT --compute-scale $COMPUTE_COUNT --block-storage-scale $STORAGE_COUNT \
+    --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
+    -e overcloud/scaleio-env.yaml
+  heat resource-list -n 10 overcloud
+  heat deployment-list
+else
+  # deploy overcloud. if you do it manually then I recommend to do it in screen.
+  echo "openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-network-type vxlan --ntp-server pool.ntp.org \
+    --control-scale $CONTROLLER_COUNT --compute-scale $COMPUTE_COUNT --block-storage-scale $STORAGE_COUNT \
+    --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
+    -e overcloud/scaleio-env.yaml"
+  echo Add -e templates/firstboot/firstboot.yaml if you use swap
+fi
 
 # check status of deployment. other heat commands also is useful to check status.
 # heat resource-list -n 5 overcloud
