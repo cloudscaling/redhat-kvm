@@ -175,7 +175,15 @@ for (( i=1; i<=STORAGE_COUNT; i++ )) ; do
   define-machine rd-$name "--disk path=$pool_path/$name.qcow2,device=disk,bus=virtio,format=qcow2 --disk path=$pool_path/$name-store.qcow2,device=disk,bus=virtio,format=qcow2"
 done
 
-# TODO: add timeout here
 # wait for undercloud machine
+iter=0
 truncate -s 0 ./tmp_file
-while ! scp -i "$my_dir/kp-$NUM" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B ./tmp_file root@${mgmt_ip}.2:/tmp/tmp_file ; do echo "Waiting for undercloud..." ; sleep 30 ; done
+while ! scp -i "$my_dir/kp-$NUM" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -B ./tmp_file root@${mgmt_ip}.2:/tmp/tmp_file ; do
+  if [[ $iter >= 20 ]] ; then
+    echo "Could not connect to undercloud"
+    exit 1
+  fi
+  echo "Waiting for undercloud..."
+  sleep 30
+  ((++iter))
+done

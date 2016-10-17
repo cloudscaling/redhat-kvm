@@ -23,9 +23,15 @@ ssh_opts="-i $my_dir/kp-$NUM -o StrictHostKeyChecking=no -o UserKnownHostsFile=/
 ssh_addr="root@${ip_addr}"
 
 # wait for undercloud and copy images for overcloud to it. (images can be build manually but it's too long - use previously built images)
+iter=0
 while ! scp $ssh_opts -B $IMAGES ${ssh_addr}:/tmp/images.tar ; do
-  echo "Waiting for undercloud..."
+  if [[ $iter >= 20 ]] ; then
+    echo "Could not connect to undercloud"
+    exit 1
+  fi
+  echo "Waiting for undercloud to copy images ..."
   sleep 30
+  ((++iter))
 done
 
 for fff in __undercloud-install-1-as-root.sh __undercloud-install-2-as-stack-user.sh tripleo.mitaka.diff ; do
