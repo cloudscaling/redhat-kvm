@@ -117,8 +117,10 @@ cat << EOF >> ~/instackenv.json
 EOF
 
 # check this json (it's optional)
-curl --silent -O https://raw.githubusercontent.com/rthallisey/clapper/master/instackenv-validator.py
-python instackenv-validator.py -f instackenv.json
+if [[ "$DEPLOY" != 1 ]] ; then
+  curl --silent -O https://raw.githubusercontent.com/rthallisey/clapper/master/instackenv-validator.py
+  python instackenv-validator.py -f instackenv.json
+fi
 
 source ./stackrc
 
