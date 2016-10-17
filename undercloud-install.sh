@@ -35,14 +35,14 @@ while ! scp $ssh_opts -B $IMAGES ${ssh_addr}:/tmp/images.tar ; do
 done
 
 for fff in __undercloud-install-1-as-root.sh __undercloud-install-2-as-stack-user.sh tripleo.mitaka.diff ; do
-  scp $ssh_opts -B $fff ${ssh_addr}:/root/$fff
+  scp $ssh_opts -B "$my_dir/$fff" ${ssh_addr}:/root/$fff
 done
 ssh -t $ssh_opts $ssh_addr "NUM=$NUM NETDEV=$NETDEV SKIP_SSH_TO_HOST_KEY=$SKIP_SSH_TO_HOST_KEY /root/__undercloud-install-1-as-root.sh"
 
 # TODO: temporary solution - 'overcloud' directory will be moved to separate repository later
-rm -f oc.tar
-tar cvf oc.tar overcloud
-scp $ssh_opts oc.tar ${ssh_addr}:/home/stack/oc.tar
-scp $ssh_opts overcloud-install.sh ${ssh_addr}:/home/stack/overcloud-install.sh
+rm -f "$my_dir/oc.tar"
+tar cvf "$my_dir/oc.tar" "$my_dir/overcloud"
+scp $ssh_opts "$my_dir/oc.tar" ${ssh_addr}:/home/stack/oc.tar
+scp $ssh_opts "$my_dir/overcloud-install.sh" ${ssh_addr}:/home/stack/overcloud-install.sh
 
 echo "SSH into undercloud: ssh -t $ssh_opts $ssh_addr"
