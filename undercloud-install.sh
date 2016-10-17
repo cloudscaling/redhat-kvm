@@ -41,7 +41,9 @@ ssh -t $ssh_opts $ssh_addr "NUM=$NUM NETDEV=$NETDEV SKIP_SSH_TO_HOST_KEY=$SKIP_S
 
 # TODO: temporary solution - 'overcloud' directory will be moved to separate repository later
 rm -f "$my_dir/oc.tar"
-tar cvf "$my_dir/oc.tar" "$my_dir/overcloud"
+pushd "$my_dir"
+tar cvf oc.tar overcloud
+popd
 scp $ssh_opts "$my_dir/oc.tar" ${ssh_addr}:/home/stack/oc.tar
 scp $ssh_opts "$my_dir/overcloud-install.sh" ${ssh_addr}:/home/stack/overcloud-install.sh
 
