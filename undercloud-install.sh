@@ -2,6 +2,9 @@
 
 # NOTE: installs Mitaka version
 
+my_file="$(readlink -e "$0")"
+my_dir="$(dirname $my_file)"
+
 # common setting from create_env.sh
 if [[ -z "$NUM" ]] ; then
   echo "Please set NUM variable to specific environment number. (export NUM=4)"
