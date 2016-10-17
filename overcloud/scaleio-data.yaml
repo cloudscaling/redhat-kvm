@@ -112,7 +112,7 @@ resources:
     properties:
       group: script
       inputs:
-      - name: UsePuppetsFromUpstream
+      - name: PuppetsVersion
       - name: PackagesSourceURL
       - name: ScaleIODriverFTP
       - name: RolesForSDS
@@ -135,7 +135,7 @@ resources:
         #!/bin/bash -e
         FILE='/etc/scaleio.env'
         rm -f $FILE
-        echo "export UsePuppetsFromUpstream='$UsePuppetsFromUpstream'" >> $FILE
+        echo "export PuppetsVersion='$PuppetsVersion'" >> $FILE
         echo "export PackagesSourceURL='$PackagesSourceURL'" >> $FILE
         echo "export ScaleIODriverFTP='$ScaleIODriverFTP'" >> $FILE
         echo "export RolesForSDS='$RolesForSDS'" >> $FILE
@@ -161,7 +161,7 @@ resources:
       servers:  {get_param: servers}
       config: {get_resource: ScaleIOConfigData}
       input_values:
-        UsePuppetsFromUpstream: {get_param: UsePuppetsFromUpstream}
+        PuppetsVersion: {get_param: PuppetsVersion}
         PackagesSourceURL: {get_param: PackagesSourceURL}
         ScaleIODriverFTP: {get_param: ScaleIODriverFTP}
         RolesForSDS: {get_param: RolesForSDS}
