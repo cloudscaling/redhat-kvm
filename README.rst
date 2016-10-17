@@ -1,3 +1,8 @@
+Overview
+========
+
+This repository provides scripts for installing TripleO with ScaleIO on kvm host.
+
 Prepare steps
 =============
 
