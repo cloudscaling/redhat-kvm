@@ -17,6 +17,7 @@ SSH_USER=${SSH_USER:-'stack'}
 
 
 # su - stack
+cd ~
 
 if [[ "$(whoami)" != "stack" ]] ; then
   echo "This script must be run under the 'stack' user"
@@ -122,7 +123,7 @@ if [[ "$DEPLOY" != 1 ]] ; then
   python instackenv-validator.py -f instackenv.json
 fi
 
-source ./stackrc
+source ~/stackrc
 
 # re-define flavors
 for id in `openstack flavor list -f value -c ID` ; do openstack flavor delete $id ; done
@@ -142,7 +143,7 @@ openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boo
 openstack flavor list --long
 
 # import overcloud configuration
-openstack baremetal import --json instackenv.json
+openstack baremetal import --json ~/instackenv.json
 openstack baremetal list
 # and configure overcloud
 openstack baremetal configure boot
