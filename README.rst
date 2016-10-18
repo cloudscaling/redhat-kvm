@@ -2,11 +2,13 @@ Overview
 ========
 
 This repository provides scripts for installing TripleO with ScaleIO on kvm host.
+Only OpenStack Mitaka version is supported now.
+
 
 Prepare steps
 =============
 
-- check that user 'stack' exists on the kvm host and he has home directory, and he added to libvirtd group
+- check that user 'stack' exists on the kvm host and he has home directory, and he is added to libvirtd group
 - checkout this project
 
 
