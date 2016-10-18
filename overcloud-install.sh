@@ -156,21 +156,57 @@ openstack baremetal introspection bulk start
 tar xvf oc.tar
 echo "Next step should be an overcloud deploy..."
 
-if [[ "$DEPLOY" == 1 ]] ; then
-  openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-network-type vxlan --ntp-server pool.ntp.org \
-    --control-scale $CONTROLLER_COUNT --compute-scale $COMPUTE_COUNT --block-storage-scale $STORAGE_COUNT \
-    --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
-    -e overcloud/scaleio-env.yaml
-  heat resource-list -n 10 overcloud
-  heat deployment-list
-else
+if [[ "$DEPLOY" == 0 ]] ; then
   # deploy overcloud. if you do it manually then I recommend to do it in screen.
   echo "openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-network-type vxlan --ntp-server pool.ntp.org \
     --control-scale $CONTROLLER_COUNT --compute-scale $COMPUTE_COUNT --block-storage-scale $STORAGE_COUNT \
     --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
     -e overcloud/scaleio-env.yaml"
-  echo Add -e templates/firstboot/firstboot.yaml if you use swap
+  echo "Add -e templates/firstboot/firstboot.yaml if you use swap"
+  exit
 fi
 
-# check status of deployment. other heat commands also is useful to check status.
-# heat resource-list -n 5 overcloud
+openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-network-type vxlan --ntp-server pool.ntp.org \
+ --control-scale $CONTROLLER_COUNT --compute-scale $COMPUTE_COUNT --block-storage-scale $STORAGE_COUNT \
+ --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
+ -e overcloud/scaleio-env.yaml
+
+echo "INFO: Heat logs" > heat.log
+errors=0
+for id in `heat deployment-list | awk '/FAILED/{print $2}'` ; do
+  echo "ERROR: Failed deployment $id" >> heat.log
+  heat deployment-show $id | grep -vP "stdout|stderr" >> heat.log
+  echo "ERROR: stdout" >> heat.log
+  heat deployment-output-show $id deploy_stdout >> heat.log
+  echo "ERROR: stderr" >> heat.log
+  heat deployment-output-show $id deploy_stderr >> heat.log
+  ((++errors))
+done
+
+for id in `heat resource-list -n 10 overcloud | awk '/FAILED/{print $12"+"$2}'` ; do
+  sn="`echo $id | cut -d '+' -f 1`"
+  rn="`echo $id | cut -d '+' -f 2`"
+  echo "ERROR: Failed resource $sn  $rn" >> heat.log
+  heat resource-show $sn $rn >> heat.log
+  ((++errors))
+done
+
+for id in `heat stack-list | awk '/FAILED/{print $2}'` ; do
+  echo "ERROR: Failed stack $id" >> heat.log
+  heat stack-show $id >> heat.log
+  ((++errors))
+done
+
+nova list
+for mid in `nova list | awk '/overcloud/{print $4"+"$12}'` ; do
+  mn="`echo $mid | cut -d '+' -f 1`"
+  mip="`echo $mid | cut -d '=' -f 2`"
+  echo "INFO: save logs from machine $mn ($mip)"
+  ssh heat-admin@$mip sudo tar cf logs.tar /var/log/nova /var/log/cinder /var/log/glance /etc/nova /etc/cinder /etc/glance
+  scp heat-admin@$mip:logs.tar $mn-logs.tar
+done
+
+
+if (( errors > 0 )) ; then
+  exit 1
+fi

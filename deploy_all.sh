@@ -1,15 +1,18 @@
 #!/bin/bash -e
 
 # first param is a path to script that can check it all
+
 # first param for the script - ssh addr to undercloud
 # other params - ssh opts
 check_script="$1"
-
 my_file="$(readlink -e "$0")"
 my_dir="$(dirname $my_file)"
 
 echo "INFO: creating environment $(date)"
 "$my_dir"/create_env.sh
+if [[ -n "$SUDO_USER" ]] ; then
+  chown $SUDO_USER $my_dir/kp-$NUM
+fi
 echo "INFO: installing undercloud $(date)"
 "$my_dir"/undercloud-install.sh
 
