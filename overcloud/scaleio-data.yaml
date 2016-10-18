@@ -121,7 +121,10 @@ resources:
       - name: ScaleIOClientPassword
       - name: DevicePaths
       - name: ProtectionDomain
+      - name: ProtectionDomainNodes
       - name: StoragePools
+      - name: ProvisioningType
+      - name: UseScaleioForGlance
       - name: ChecksumMode
       - name: SparePolicy
       - name: ZeroPadding
@@ -144,7 +147,10 @@ resources:
         echo "export ScaleIOClientPassword='$ScaleIOClientPassword'" >> $FILE
         echo "export DevicePaths='$DevicePaths'" >> $FILE
         echo "export ProtectionDomain='$ProtectionDomain'" >> $FILE
+        echo "export ProtectionDomainNodes='$ProtectionDomainNodes'" >> $FILE
         echo "export StoragePools='$StoragePools'" >> $FILE
+        echo "export ProvisioningType='$ProvisioningType'" >> $FILE
+        echo "export UseScaleioForGlance='$UseScaleioForGlance'" >> $FILE
         echo "export ChecksumMode='$ChecksumMode'" >> $FILE
         echo "export SparePolicy='$SparePolicy'" >> $FILE
         echo "export ZeroPadding='$ZeroPadding'" >> $FILE
@@ -170,7 +176,10 @@ resources:
         ScaleIOClientPassword: {get_param: ScaleIOClientPassword}
         DevicePaths: {get_param: DevicePaths}
         ProtectionDomain: {get_param: ProtectionDomain}
+        ProtectionDomainNodes: {get_param: ProtectionDomainNodes}
         StoragePools: {get_param: StoragePools}
+        ProvisioningType: {get_param: ProvisioningType}
+        UseScaleioForGlance: {get_param: UseScaleioForGlance}
         ChecksumMode: {get_param: ChecksumMode}
         SparePolicy: {get_param: SparePolicy}
         ZeroPadding: {get_param: ZeroPadding}
