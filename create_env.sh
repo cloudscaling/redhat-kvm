@@ -9,7 +9,7 @@ fi
 # number of machines in overcloud
 # by default scripts will create hyperconverged environment with SDS on compute
 CONTROLLER_COUNT=${CONTROLLER_COUNT:-1}
-COMPUTE_COUNT=${COMPUTE_COUNT:-3}
+COMPUTE_COUNT=${COMPUTE_COUNT:-2}
 STORAGE_COUNT=${STORAGE_COUNT:-1}
 
 my_file="$(readlink -e "$0")"
