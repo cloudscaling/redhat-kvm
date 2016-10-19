@@ -27,7 +27,9 @@ if ! scli --query_cluster --approve_certificate 2>/dev/null; then
   server-cmd "class { 'scaleio::mdm_server': master_mdm_name=>'$name', mdm_ips=>'$internal_ip', is_manager=>1 }"
   server-cmd "scaleio::login { 'first login': password=>'admin' }"
   server-cmd "scaleio::cluster { 'cluster': password=>'admin', new_password=>'$ScaleIOAdminPassword' }"
-  cluster-cmd "scaleio::cluster { 'cluster': client_password=>'$ScaleIOClientPassword' }"
+  # create client_user and set password for him
+  # and set high performance profile for all
+  cluster-cmd "scaleio::cluster { 'cluster': client_password=>'$ScaleIOClientPassword', performance_profile=>'high_performance' }"
 fi
 
 # this code for other nodes than master
