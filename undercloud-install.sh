@@ -45,6 +45,8 @@ pushd "$my_dir"
 tar cvf oc.tar overcloud
 popd
 scp $ssh_opts "$my_dir/oc.tar" ${ssh_addr}:/home/stack/oc.tar
+rm -f "$my_dir/oc.tar"
 scp $ssh_opts "$my_dir/overcloud-install.sh" ${ssh_addr}:/home/stack/overcloud-install.sh
+scp $ssh_opts "$my_dir/save_logs.sh" ${ssh_addr}:/home/stack/save_logs.sh
 
 echo "SSH into undercloud: ssh -t $ssh_opts $ssh_addr"

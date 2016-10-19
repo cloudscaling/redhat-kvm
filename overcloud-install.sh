@@ -154,6 +154,7 @@ openstack baremetal introspection bulk start
 #sudo journalctl -l -u openstack-ironic-discoverd -u openstack-ironic-discoverd-dnsmasq -u openstack-ironic-conductor -f
 
 tar xvf oc.tar
+rm -f oc.tar
 echo "Next step should be an overcloud deploy..."
 
 if [[ "$DEPLOY" == 0 ]] ; then

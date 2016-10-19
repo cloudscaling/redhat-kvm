@@ -39,7 +39,7 @@ function catch_errors() {
 echo "INFO: creating environment $(date)"
 "$my_dir"/create_env.sh
 if [[ -n "$SUDO_USER" ]] ; then
-  chown $SUDO_USER $my_dir/kp-$NUM
+  chown $SUDO_USER:$SUDO_GID $my_dir/kp-$NUM*
 fi
 echo "INFO: installing undercloud $(date)"
 "$my_dir"/undercloud-install.sh
