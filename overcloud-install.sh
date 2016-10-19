@@ -171,7 +171,7 @@ openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-ne
  --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
  -e overcloud/scaleio-env.yaml
 
-echo "INFO: collecting logs"
+echo "INFO: collecting HEAT logs"
 
 echo "INFO: Heat logs" > heat.log
 heat stack-list -n >> heat.log
@@ -199,16 +199,6 @@ for id in `heat stack-list | awk '/FAILED/{print $2}'` ; do
   heat stack-show $id >> heat.log
   ((++errors))
 done
-
-nova list
-for mid in `nova list | awk '/overcloud/{print $4"+"$12}'` ; do
-  mn="`echo $mid | cut -d '+' -f 1`"
-  mip="`echo $mid | cut -d '=' -f 2`"
-  echo "INFO: save logs from machine $mn ($mip)"
-  ssh heat-admin@$mip sudo tar cf logs.tar /var/log/nova /var/log/cinder /var/log/glance /etc/nova /etc/cinder /etc/glance
-  scp heat-admin@$mip:logs.tar $mn-logs.tar
-done
-
 
 if (( errors > 0 )) ; then
   exit 1

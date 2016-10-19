@@ -8,6 +8,34 @@ check_script="$1"
 my_file="$(readlink -e "$0")"
 my_dir="$(dirname $my_file)"
 
+BASE_ADDR=${BASE_ADDR:-172}
+((env_addr=BASE_ADDR+NUM*10))
+ip_addr="192.168.${env_addr}.2"
+ssh_opts="-i $my_dir/kp-$NUM -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+ssh_addr="root@${ip_addr}"
+
+trap 'catch_errors $LINENO' ERR
+
+oc=0
+function save_overcloud_logs() {
+  if [[ $oc == 1 ]] ; then
+    ssh -t $ssh_opts $ssh_addr "sudo -u stack /home/stack/save_logs.sh"
+  fi
+}
+
+function catch_errors() {
+  local exit_code=$?
+  echo "Line: $1  Error=$exit_code  Command: '$(eval echo $BASH_COMMAND)'"
+  trap - ERR
+
+  # sleep some time to flush logs
+  sleep 20
+  save_overcloud_logs
+
+  exit $exit_code
+}
+
+
 echo "INFO: creating environment $(date)"
 "$my_dir"/create_env.sh
 if [[ -n "$SUDO_USER" ]] ; then
@@ -17,11 +45,7 @@ echo "INFO: installing undercloud $(date)"
 "$my_dir"/undercloud-install.sh
 
 echo "INFO: installing overcloud $(date)"
-BASE_ADDR=${BASE_ADDR:-172}
-((env_addr=BASE_ADDR+NUM*10))
-ip_addr="192.168.${env_addr}.2"
-ssh_opts="-i $my_dir/kp-$NUM -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-ssh_addr="root@${ip_addr}"
+oc=1
 ssh -t $ssh_opts $ssh_addr "sudo -u stack NUM=$NUM DEPLOY=1 /home/stack/overcloud-install.sh"
 
 echo "INFO: checking overcloud $(date)"
@@ -30,3 +54,7 @@ if [[ -n "$check_script" ]] ; then
 else
   echo "WARNING: Deployment will not be checked!"
 fi
+
+
+trap - ERR
+save_overcloud_logs
