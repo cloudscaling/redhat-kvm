@@ -171,7 +171,10 @@ openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-ne
  --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
  -e overcloud/scaleio-env.yaml
 
+echo "INFO: collecting logs"
+
 echo "INFO: Heat logs" > heat.log
+heat stack-list -n >> heat.log
 errors=0
 for id in `heat deployment-list | awk '/FAILED/{print $2}'` ; do
   echo "ERROR: Failed deployment $id" >> heat.log
