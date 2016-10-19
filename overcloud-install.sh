@@ -157,7 +157,7 @@ tar xvf oc.tar
 rm -f oc.tar
 echo "Next step should be an overcloud deploy..."
 
-if [[ "$DEPLOY" == 0 ]] ; then
+if [[ "$DEPLOY" != '1' ]] ; then
   # deploy overcloud. if you do it manually then I recommend to do it in screen.
   echo "openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-network-type vxlan --ntp-server pool.ntp.org \
     --control-scale $CONTROLLER_COUNT --compute-scale $COMPUTE_COUNT --block-storage-scale $STORAGE_COUNT \
