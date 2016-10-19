@@ -17,7 +17,6 @@ controllers_internal_ips=`grep "${cloud_name}-controller-[0-9]\+-internalapi$" /
 # install SDC to all machines.
 server-cmd "class { 'scaleio::sdc_server': mdm_ip=>'$controllers_internal_ips' }"
 
-# TODO: run other steps accccording to $role
 gateway_port=${GatewayPort:-4443}
 
 if [[ "$role" == "controller" ]] ; then

@@ -25,7 +25,6 @@ This directory will be extracted from this repository.
 
 most of script files has definition of 'NUM' variable at start.
 It allows to use several environments.
-TODO: this option should be set outside of all scripts
 
 also create_env.sh defines machines counts for each role
 
