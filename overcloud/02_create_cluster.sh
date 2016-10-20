@@ -31,6 +31,10 @@ if ! scli --query_cluster --approve_certificate 2>/dev/null; then
   cluster-cmd "scaleio::cluster { 'cluster': client_password=>'$ScaleIOClientPassword', performance_profile=>'high_performance' }"
 fi
 
+echo "INFO: step 02. node = $(hostname)" >> /var/log/scaleio.log
+echo "Controllers count = $controllers_count" >> /var/log/scaleio.log
+env | sort >> /var/log/scaleio.log
+
 # NOTE: node replacement is not supported!!!
 # TODO: calculate node roles from node list but not from node name only. here and in step 01.
 slave_index=0
@@ -65,7 +69,7 @@ if (( mode > 1 )) ; then
   done
 fi
 
-cluster-cmd "scaleio::cluster { 'cluster': cluster_mode=$mode }"
+cluster-cmd "scaleio::cluster { 'cluster': cluster_mode=>'$mode' }"
 
 
 # TODO: add and provide options for cluster

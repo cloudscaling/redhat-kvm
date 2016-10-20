@@ -86,6 +86,8 @@ resources:
     type: OS::Heat::SoftwareConfig
     properties:
       group: script
+      inputs:
+      - name: controllers_count
       config:
         get_file: 02_create_cluster.sh
   ScaleIODeployment_Step02:
@@ -95,6 +97,12 @@ resources:
       # TODO: run it on all controllers to add all MDM's to cluster
       server: {get_param: [controller_servers, '0']}
       config: {get_resource: ExtraConfigFile2}
+      input_values:
+        controllers_count:
+          yaql:
+            expression: $.data.servers.length()
+            data:
+              servers: {get_param: controller_servers}
 
   ExtraConfigFile3:
     type: OS::Heat::SoftwareConfig
