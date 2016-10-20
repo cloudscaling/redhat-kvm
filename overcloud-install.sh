@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 my_file="$(readlink -e "$0")"
 my_dir="$(dirname $my_file)"
@@ -153,24 +153,29 @@ openstack baremetal introspection bulk start
 # this is a recommended command to check and wait end of introspection. but previous command can wait itself.
 #sudo journalctl -l -u openstack-ironic-discoverd -u openstack-ironic-discoverd-dnsmasq -u openstack-ironic-conductor -f
 
-tar xvf oc.tar
+tar -xf oc.tar
 rm -f oc.tar
 echo "Next step should be an overcloud deploy..."
+
+ha_opts=""
+if (( CONTROLLER_COUNT > 1 )) ; then
+  ha_opts="-e /usr/share/openstack-tripleo-heat-templates/environments/puppet-pacemaker.yaml"
+fi
 
 if [[ "$DEPLOY" != '1' ]] ; then
   # deploy overcloud. if you do it manually then I recommend to do it in screen.
   echo "openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-network-type vxlan --ntp-server pool.ntp.org \
     --control-scale $CONTROLLER_COUNT --compute-scale $COMPUTE_COUNT --block-storage-scale $STORAGE_COUNT \
     --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
-    -e overcloud/scaleio-env.yaml"
-  echo "Add -e templates/firstboot/firstboot.yaml if you use swap"
+    -e overcloud/scaleio-env.yaml $ha_opts"
+  echo "Add '-e templates/firstboot/firstboot.yaml' if you use swap"
   exit
 fi
 
 openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-network-type vxlan --ntp-server pool.ntp.org \
  --control-scale $CONTROLLER_COUNT --compute-scale $COMPUTE_COUNT --block-storage-scale $STORAGE_COUNT \
  --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
- -e overcloud/scaleio-env.yaml
+ -e overcloud/scaleio-env.yaml $ha_opts
 
 echo "INFO: collecting HEAT logs"
 

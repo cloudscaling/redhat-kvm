@@ -15,7 +15,7 @@ function server-cmd() {
 }
 
 function cluster-cmd() {
-    server-cmd "scaleio::login {'login': password=>'$ScaleIOAdminPassword'} -> $1"
+  server-cmd "scaleio::login {'login': password=>'$ScaleIOAdminPassword'} -> $1"
 }
 
 name="$(hostname)"

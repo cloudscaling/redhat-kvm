@@ -29,7 +29,7 @@ function server-cmd() {
 }
 
 function cluster-cmd() {
-    server-cmd "scaleio::login {'login': password=>'$ScaleIOAdminPassword'} -> $1"
+  server-cmd "scaleio::login {'login': password=>'$ScaleIOAdminPassword'} -> $1"
 }
 
 function is_in_list() {
@@ -111,6 +111,3 @@ for node in $nodes ; do
     cluster-cmd "scaleio::sds { '$node': $sds_opts }"
   fi
 done
-
-# apply high performance profile
-cluster-cmd "scaleio::cluster { 'cluster': performance_profile=>'high_performance' }"
