@@ -18,7 +18,7 @@ function cluster-cmd() {
 }
 
 name="$(hostname)"
-internal_ip=`grep "${name}-internalapi$" /etc/hosts | awk '{print($1)}'`
+internal_ip=`python -c "import socket; print(sorted(socket.gethostbyname_ex('$name')[2])[0])"`
 
 # NOTE: this code should be run only on master
 # next code must be idempotent!!!
@@ -31,9 +31,41 @@ if ! scli --query_cluster --approve_certificate 2>/dev/null; then
   cluster-cmd "scaleio::cluster { 'cluster': client_password=>'$ScaleIOClientPassword', performance_profile=>'high_performance' }"
 fi
 
-# register other MDMs
-# puppet apply "scaleio::mdm { 'slave': sio_name=>'slave', ips=>'10.0.0.1', role=>'manager' }"
-# puppet apply "scaleio::mdm { 'tb': sio_name=>'tb', ips=>'10.0.0.2', role=>'tb' }"
+# NOTE: node replacement is not supported!!!
+# TODO: calculate node roles from node list but not from node name only. here and in step 01.
+slave_index=0
+if (( controllers_count < 3 )) ; then
+  mode=1
+elif (( controllers_count < 5 )) ; then
+  mode=3
+  slave_index=2
+else
+  mode=5
+  slave_index=3
+fi
+
+if (( mode > 1 )) ; then
+  cloud_name=$(hostname | cut -d '-' -f 1)
+  nodes=`grep -o "${cloud_name}-controller-[0-9]\+\$" /etc/hosts`
+  for node in $nodes ; do
+    # skip master
+    if [[ "$(hostname)" == "$node" ]] ; then
+      continue
+    fi
+
+    ip=`grep "${node}-internalapi$" /etc/hosts | awk '{print $1}'`
+    node_index=$(echo "$node" | cut -d '-' -f 3)
+    if (( node_index < slave_idex )) ; then
+      role='manager'
+    else
+      role='tb'
+    fi
+    # TODO: pass management_ips to mdm
+    cluster-cmd "scaleio::mdm { 'mdm $node': sio_name=>'$node', ips=>'$ip', role=>'$role' }"
+  done
+fi
+
+cluster-cmd "scaleio::cluster { 'cluster': cluster_mode=$mode }"
 
 
 # TODO: add and provide options for cluster
