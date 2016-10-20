@@ -33,10 +33,11 @@ if [[ "$PuppetsVersion" == "master" ]] ; then
   rm -rf /etc/puppet/modules/scaleio_openstack
   git clone -q https://github.com/emccode/puppet-scaleio-openstack /etc/puppet/modules/scaleio_openstack
 else
-  puppet module install --version "$PuppetsVersion" cloudscaling-scaleio_openstack
   # NOTE: this module can't be installed due to strange installed modules
-  # TODO: fix it...
+  # script fixes pacemaker's metadata to avoid bug at installation
+  sed -i 's/>\~1\.7\.0/>=1.7.0/g' /etc/puppet/modules/pacemaker/metadata.json
   puppet module install --version "$PuppetsVersion" cloudscaling-scaleio
+  puppet module install --version "$PuppetsVersion" cloudscaling-scaleio_openstack
 fi
 
 function server-cmd() {
