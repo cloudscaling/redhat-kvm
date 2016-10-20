@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # NOTE: this script is run only for first controller
-# TODO: rework script runner for registering other managers and tie-breakers (is_manager = 1 or 0)
 
 source /etc/scaleio.env
 
@@ -32,10 +31,10 @@ if ! scli --query_cluster --approve_certificate 2>/dev/null; then
   cluster-cmd "scaleio::cluster { 'cluster': client_password=>'$ScaleIOClientPassword', performance_profile=>'high_performance' }"
 fi
 
-# this code for other nodes than master
-# server-cmd "class { 'scaleio::mdm_server': is_manager=>$is_manager }"
+# register other MDMs
+# puppet apply "scaleio::mdm { 'slave': sio_name=>'slave', ips=>'10.0.0.1', role=>'manager' }"
+# puppet apply "scaleio::mdm { 'tb': sio_name=>'tb', ips=>'10.0.0.2', role=>'tb' }"
+
 
 # TODO: add and provide options for cluster
 # license-file-path, capacity-high-alert-threshold, capacity-critical-alert-threshold
-
-

@@ -36,8 +36,9 @@ else
   # NOTE: this module can't be installed due to strange installed modules
   # script fixes pacemaker's metadata to avoid bug at installation
   sed -i 's/>\~1\.7\.0/>=1.7.0/g' /etc/puppet/modules/pacemaker/metadata.json
-  puppet module install --version "$PuppetsVersion" cloudscaling-scaleio
-  puppet module install --version "$PuppetsVersion" cloudscaling-scaleio_openstack
+  # do not fail script - modules can be already present
+  puppet module install --version "$PuppetsVersion" cloudscaling-scaleio || /bin/true
+  puppet module install --version "$PuppetsVersion" cloudscaling-scaleio_openstack || /bin/true
 fi
 
 function server-cmd() {
@@ -53,19 +54,17 @@ function server-cmd() {
 
 if [[ "$role" == "controller" ]] ; then
 
-  cloud_name=$(hostname | cut -d '-' -f 1)
-  controllers_count=$(grep -c "${cloud_name}-controller-[0-9]\+-internalapi$" /etc/hosts)
-  if (( $controllers_count < 3 )) ; then
+  if (( controllers_count < 3 )) ; then
     managers_count=1
-  elif (( $controllers_count < 5 )) ; then
+  elif (( controllers_count < 5 )) ; then
     managers_count=2
   else
     managers_count=3
   fi
-  #TODO: node replacement is not supported!!!
+  # NOTE: node replacement is not supported!!!
   first_controller_index=0
   node_index=$(hostname | cut -d '-' -f 3)
-  if (( $node_index - $first_controller_index < $managers_count )) ; then
+  if (( node_index - first_controller_index < managers_count )) ; then
     is_manager=1
   else
     is_manager=0

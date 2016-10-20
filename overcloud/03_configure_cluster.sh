@@ -1,8 +1,6 @@
 #!/bin/bash
 
 # NOTE: this script is run only for first controller
-# TODO: rework script runner for registering other managers and tie-breakers (is_manager = 1 or 0)
-# server-cmd "class { 'scaleio::mdm_server': is_manager=>$is_manager }"
 
 # Network mapping:
 #   1. Internal API (OpenStack internal API, RPC, and DB):
