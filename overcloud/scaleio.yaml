@@ -39,7 +39,6 @@ resources:
       group: script
       inputs:
       - name: role
-      - name: controllers_count
       config:
         get_file: 01_install_packages.sh
   ScaleIODeployment_Step01Controller:
@@ -50,11 +49,6 @@ resources:
       config: {get_resource: ExtraConfigFile1}
       input_values:
         role: controller
-        controllers_count:
-          yaql:
-            expression: $.data.servers.length()
-            data:
-              servers: {get_param: controller_servers}
   ScaleIODeployment_Step01Compute:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIOPrepareConfigCompute
@@ -63,11 +57,6 @@ resources:
       config: {get_resource: ExtraConfigFile1}
       input_values:
         role: novacompute
-        controllers_count:
-          yaql:
-            expression: $.data.servers.length()
-            data:
-              servers: {get_param: controller_servers}
   ScaleIODeployment_Step01BlockStorage:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIOPrepareConfigBlockStorage
@@ -76,18 +65,11 @@ resources:
       config: {get_resource: ExtraConfigFile1}
       input_values:
         role: blockstorage
-        controllers_count:
-          yaql:
-            expression: $.data.servers.length()
-            data:
-              servers: {get_param: controller_servers}
 
   ExtraConfigFile2:
     type: OS::Heat::SoftwareConfig
     properties:
       group: script
-      inputs:
-      - name: controllers_count
       config:
         get_file: 02_create_cluster.sh
   ScaleIODeployment_Step02:
@@ -97,12 +79,6 @@ resources:
       # TODO: run it on all controllers to add all MDM's to cluster
       server: {get_param: [controller_servers, '0']}
       config: {get_resource: ExtraConfigFile2}
-      input_values:
-        controllers_count:
-          yaql:
-            expression: $.data.servers.length()
-            data:
-              servers: {get_param: controller_servers}
 
   ExtraConfigFile3:
     type: OS::Heat::SoftwareConfig

@@ -54,9 +54,8 @@ function server-cmd() {
 
 if [[ "$role" == "controller" ]] ; then
 
-  echo "INFO: step01. node = $(hostname)" >> /var/log/scaleio.log
-  echo "Controllers count = $controllers_count" >> /var/log/scaleio.log
-  env | sort >> /var/log/scaleio.log
+  cloud_name=$(hostname | cut -d '-' -f 1)
+  controllers_count=$(grep -c "${cloud_name}-controller-[0-9]\+-internalapi$" /etc/hosts)
   if (( controllers_count < 3 )) ; then
     managers_count=1
   elif (( controllers_count < 5 )) ; then

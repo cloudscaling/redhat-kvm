@@ -31,9 +31,8 @@ if ! scli --query_cluster --approve_certificate 2>/dev/null; then
   cluster-cmd "scaleio::cluster { 'cluster': client_password=>'$ScaleIOClientPassword', performance_profile=>'high_performance' }"
 fi
 
-echo "INFO: step 02. node = $(hostname)" >> /var/log/scaleio.log
-echo "Controllers count = $controllers_count" >> /var/log/scaleio.log
-env | sort >> /var/log/scaleio.log
+cloud_name=$(hostname | cut -d '-' -f 1)
+controllers_count=$(grep -c "${cloud_name}-controller-[0-9]\+-internalapi$" /etc/hosts)
 
 # NOTE: node replacement is not supported!!!
 # TODO: calculate node roles from node list but not from node name only. here and in step 01.
@@ -49,7 +48,6 @@ else
 fi
 
 if (( mode > 1 )) ; then
-  cloud_name=$(hostname | cut -d '-' -f 1)
   nodes=`grep -o "${cloud_name}-controller-[0-9]\+\$" /etc/hosts`
   for node in $nodes ; do
     # skip master
