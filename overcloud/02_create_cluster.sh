@@ -57,7 +57,7 @@ if (( mode > 1 )) ; then
 
     ip=`grep "${node}-internalapi$" /etc/hosts | awk '{print $1}'`
     node_index=$(echo "$node" | cut -d '-' -f 3)
-    if (( node_index < slave_idex )) ; then
+    if (( node_index < slave_index )) ; then
       role='manager'
     else
       role='tb'
