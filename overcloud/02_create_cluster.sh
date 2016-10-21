@@ -35,7 +35,7 @@ cloud_name=$(hostname | cut -d '-' -f 1)
 controllers_count=$(grep -c "${cloud_name}-controller-[0-9]\+-internalapi$" /etc/hosts)
 
 # NOTE: node replacement is not supported!!!
-# TODO: calculate node roles from node list but not from node name only. here and in step 01.
+# TODO: calculate node roles from node list but not from node name only. here and at step 01.
 slave_index=0
 if (( controllers_count < 3 )) ; then
   mode=1
@@ -48,6 +48,8 @@ else
 fi
 
 if (( mode > 1 )) ; then
+  slave_names=""
+  tb_names=""
   nodes=`grep -o "${cloud_name}-controller-[0-9]\+\$" /etc/hosts`
   for node in $nodes ; do
     # skip master
@@ -58,17 +60,20 @@ if (( mode > 1 )) ; then
     ip=`grep "${node}-internalapi$" /etc/hosts | awk '{print $1}'`
     node_index=$(echo "$node" | cut -d '-' -f 3)
     if (( node_index < slave_index )) ; then
+      slave_names="$slave_names,$node"
       role='manager'
     else
+      tb_names="$tb_names,$node"
       role='tb'
     fi
     # TODO: pass management_ips to mdm
     cluster-cmd "scaleio::mdm { 'mdm $node': sio_name=>'$node', ips=>'$ip', role=>'$role' }"
   done
+
+  slave_names="$(echo ${slave_names,1})"
+  tb_names="$(echo ${tb_names,1})"
+  cluster-cmd "scaleio::cluster { 'cluster': cluster_mode=>'$mode', slave_names=>'$slave_names', tb_names=>'$tb_names' }"
 fi
-
-cluster-cmd "scaleio::cluster { 'cluster': cluster_mode=>'$mode' }"
-
 
 # TODO: add and provide options for cluster
 # license-file-path, capacity-high-alert-threshold, capacity-critical-alert-threshold
