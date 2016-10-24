@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # NOTE: this script is run only for first controller
 
@@ -16,6 +16,8 @@
 
 
 source /etc/scaleio.env
+
+cat /etc/hosts
 
 function server-cmd() {
   puppet apply -e "$1" --detailed-exitcodes
