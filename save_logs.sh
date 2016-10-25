@@ -20,7 +20,7 @@ for mid in `nova list | awk '/overcloud/{print $4"+"$12}'` ; do
   mip="`echo $mid | cut -d '=' -f 2`"
   echo "INFO: save logs from machine $mn ($mip)"
   ssh heat-admin@$mip sudo tar --ignore-failed-read -cf logs.tar /var/log/nova /var/log/cinder /var/log/glance /etc/nova /etc/cinder /etc/glance /etc/scaleio.env /var/log/scaleio.log
-  files=`ssh heat-admin@$mip sudo find /opt/ \( -name logs -o -name conf \)`
+  files=`ssh heat-admin@$mip sudo find /opt/ \\( -name logs -o -name conf \\)`
   ssh heat-admin@$mip sudo tar --ignore-failed-read -rf logs.tar $files
   scp heat-admin@$mip:logs.tar $mn-logs.tar
 done
