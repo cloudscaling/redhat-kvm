@@ -6,6 +6,8 @@ cd ~
 
 NETDEV=${NETDEV:-'eth1'}
 SKIP_SSH_TO_HOST_KEY=${SKIP_SSH_TO_HOST_KEY:-'no'}
+OPENSTACK_VERSION=${OPENSTACK_VERSION:-'mitaka'}
+
 ((addr=176+NUM*10))
 prov_ip="192.168.$addr"
 ((addr=172+NUM*10))
@@ -33,26 +35,33 @@ openstack undercloud install
 
 # function to build images if needed
 function create_images() {
-  mkdir -p ~/images
-  cd ~/images
+  mkdir -p images
+  cd images
 
   # next line is needed only if undercloud's OS is deifferent
   #export NODE_DIST=centos7
-  export STABLE_RELEASE=mitaka
+  export STABLE_RELEASE="$OPENSTACK_VERSION"
   export USE_DELOREAN_TRUNK=1
   export DELOREAN_REPO_FILE="delorean.repo"
-  export DELOREAN_TRUNK_REPO="http://trunk.rdoproject.org/centos7-mitaka/current/"
+  export DELOREAN_TRUNK_REPO="http://trunk.rdoproject.org/centos7-$OPENSTACK_VERSION/current/"
   export DIB_YUM_REPO_CONF=/etc/yum.repos.d/delorean*
 
   #export DELOREAN_TRUNK_REPO="http://buildlogs.centos.org/centos/7/cloud/x86_64/rdo-trunk-master-tripleo/"
   #export DIB_INSTALLTYPE_puppet_modules=source
 
   openstack overcloud image build --all
+
+  cd ..
 }
 
-# but right now script will use previously built images
 cd ~
-tar xvf /tmp/images.tar
+if [ -f /tmp/images.tar ] ; then
+  # but right now script will use previously built images
+  tar -xf /tmp/images.tar
+else
+  create_images
+  tar -cf images.tar images
+fi
 
 # upload images to undercloud
 source ./stackrc

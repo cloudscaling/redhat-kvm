@@ -2,7 +2,6 @@ Overview
 ========
 
 This repository provides scripts for installing TripleO with ScaleIO on kvm host.
-Only OpenStack Mitaka version is supported now.
 
 
 Prepare steps
@@ -33,6 +32,7 @@ Install steps
 =============
 
 export NUM=0
+export OPENSTACK_VERSION='mitaka'
 sudo ./create_env.sh
 sudo ./undercloud-install.sh
 # address depends on NUM varaible. check previous output for exact address
