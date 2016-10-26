@@ -172,16 +172,20 @@ if [[ "$DEPLOY" != '1' ]] ; then
   exit
 fi
 
+# script will handle errors below
+set +e
+
 openstack overcloud deploy --templates --neutron-tunnel-types vxlan --neutron-network-type vxlan --ntp-server pool.ntp.org \
  --control-scale $CONTROLLER_COUNT --compute-scale $COMPUTE_COUNT --block-storage-scale $STORAGE_COUNT \
  --control-flavor control --compute-flavor compute --block-storage-flavor block-storage \
  -e overcloud/scaleio-env.yaml $ha_opts
 
+errors=$?
+
 echo "INFO: collecting HEAT logs"
 
 echo "INFO: Heat logs" > heat.log
 heat stack-list -n >> heat.log
-errors=0
 for id in `heat deployment-list | awk '/FAILED/{print $2}'` ; do
   echo "ERROR: Failed deployment $id" >> heat.log
   heat deployment-show $id | grep -vP "stdout|stderr" >> heat.log
