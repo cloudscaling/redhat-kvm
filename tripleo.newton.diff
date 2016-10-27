@@ -1,0 +1,37 @@
+diff --git a/overcloud-resource-registry-puppet.j2.yaml b/overcloud-resource-registry-puppet.j2.yaml
+index 93734eb..4c62215 100644
+--- a/overcloud-resource-registry-puppet.j2.yaml
++++ b/overcloud-resource-registry-puppet.j2.yaml
+@@ -6,6 +6,9 @@ resource_registry:
+   OS::TripleO::Hosts::SoftwareConfig: hosts-config.yaml
+   OS::TripleO::DefaultPasswords: default_passwords.yaml
+ 
++  # "AllNodes" Extra cluster config, runs on all nodes after the post_deploy
++  OS::TripleO::AllNodesExtraConfigPost: OS::Heat::None
++
+   # Tasks (for internal TripleO usage)
+   OS::TripleO::Tasks::UpdateWorkflow: OS::Heat::None
+   OS::TripleO::Tasks::PackageUpdate: extraconfig/tasks/yum_update.yaml
+diff --git a/overcloud.j2.yaml b/overcloud.j2.yaml
+index 7e1f496..4e6274b 100644
+--- a/overcloud.j2.yaml
++++ b/overcloud.j2.yaml
+@@ -543,6 +543,18 @@ resources:
+         {{role.name}}: {get_attr: [{{role.name}}ServiceChain, role_data]}
+ {% endfor %}
+ 
++  # Optional ExtraConfigPost for all nodes - all roles are passed in here, but
++  # the nested template may configure each role differently (or not at all)
++  AllNodesExtraConfigPost:
++    type: OS::TripleO::AllNodesExtraConfigPost
++    depends_on:
++      - AllNodesDeploySteps
++    properties:
++{% for role in roles %}
++      {{role.name}}_servers: {get_attr: [{{role.name}}, attributes, nova_server_resource]}
++{% endfor %}
++      public_vip: {get_attr: [VipMap, net_ip_map, external]}
++
+ outputs:
+   ManagedEndpoints:
+     description: Asserts that the keystone endpoints have been provisioned.

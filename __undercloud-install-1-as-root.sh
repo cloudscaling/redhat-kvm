@@ -60,8 +60,8 @@ openstack-service restart nova
 openstack-service restart ironic
 
 # patch tripleo templates
-if [[ "$OPENSTACK_VERSION" == 'mitaka' ]] ; then
-  if patch -p 1 -i /root/tripleo.mitaka.diff -d /usr/share/openstack-tripleo-heat-templates/ -b -f --dry-run ; then
-    patch -p 1 -i /root/tripleo.mitaka.diff -d /usr/share/openstack-tripleo-heat-templates/ -b
+if [ -f /root/tripleo.$OPENSTACK_VERSION.diff ] ; then
+  if patch -p 1 -i /root/tripleo.$OPENSTACK_VERSION.diff -d /usr/share/openstack-tripleo-heat-templates/ -b -f --dry-run ; then
+    patch -p 1 -i /root/tripleo.$OPENSTACK_VERSION.diff -d /usr/share/openstack-tripleo-heat-templates/ -b
   fi
 fi

@@ -31,11 +31,11 @@ index ae1d6e7..caedd94 100644
 +      - BlockStorageNodesPostDeployment
 +      - CephStorageNodesPostDeployment
 +    properties:
-+      controller_servers: {get_attr: [Controller, attributes, nova_server_resource]}
-+      compute_servers: {get_attr: [Compute, attributes, nova_server_resource]}
-+      blockstorage_servers: {get_attr: [BlockStorage, attributes, nova_server_resource]}
-+      objectstorage_servers: {get_attr: [ObjectStorage, attributes, nova_server_resource]}
-+      cephstorage_servers: {get_attr: [CephStorage, attributes, nova_server_resource]}
++      Controller_servers: {get_attr: [Controller, attributes, nova_server_resource]}
++      Compute_servers: {get_attr: [Compute, attributes, nova_server_resource]}
++      BlockStorage_servers: {get_attr: [BlockStorage, attributes, nova_server_resource]}
++      ObjectStorage_servers: {get_attr: [ObjectStorage, attributes, nova_server_resource]}
++      CephStorage_servers: {get_attr: [CephStorage, attributes, nova_server_resource]}
 +      public_vip: {get_attr: [VipMap, net_ip_map, external]}
 +
  outputs:

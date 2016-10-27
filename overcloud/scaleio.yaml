@@ -4,15 +4,15 @@ description: >
   Extra ScaleIO configuration
 
 parameters:
-  controller_servers:
+  Controller_servers:
     type: json
-  compute_servers:
+  Compute_servers:
     type: json
-  blockstorage_servers:
+  BlockStorage_servers:
     type: json
-  objectstorage_servers:
+  ObjectStorage_servers:
     type: json
-  cephstorage_servers:
+  CephStorage_servers:
     type: json
   public_vip:
     type: string
@@ -23,15 +23,15 @@ resources:
   ScaleIOPrepareConfigController:
     type: OS::ScaleIO::ScaleIODeploymentData
     properties:
-      servers: {get_param: controller_servers}
+      servers: {get_param: Controller_servers}
   ScaleIOPrepareConfigCompute:
     type: OS::ScaleIO::ScaleIODeploymentData
     properties:
-      servers: {get_param: compute_servers}
+      servers: {get_param: Compute_servers}
   ScaleIOPrepareConfigBlockStorage:
     type: OS::ScaleIO::ScaleIODeploymentData
     properties:
-      servers: {get_param: blockstorage_servers}
+      servers: {get_param: BlockStorage_servers}
 
   ExtraConfigFile1:
     type: OS::Heat::SoftwareConfig
@@ -45,7 +45,7 @@ resources:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIOPrepareConfigController
     properties:
-      servers: {get_param: controller_servers}
+      servers: {get_param: Controller_servers}
       config: {get_resource: ExtraConfigFile1}
       input_values:
         role: controller
@@ -53,7 +53,7 @@ resources:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIOPrepareConfigCompute
     properties:
-      servers: {get_param: compute_servers}
+      servers: {get_param: Compute_servers}
       config: {get_resource: ExtraConfigFile1}
       input_values:
         role: novacompute
@@ -61,7 +61,7 @@ resources:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIOPrepareConfigBlockStorage
     properties:
-      servers: {get_param: blockstorage_servers}
+      servers: {get_param: BlockStorage_servers}
       config: {get_resource: ExtraConfigFile1}
       input_values:
         role: blockstorage
@@ -77,7 +77,7 @@ resources:
     depends_on: [ScaleIODeployment_Step01Controller, ScaleIODeployment_Step01Compute, ScaleIODeployment_Step01BlockStorage]
     properties:
       # TODO: run it on all controllers to add all MDM's to cluster
-      server: {get_param: [controller_servers, '0']}
+      server: {get_param: [Controller_servers, '0']}
       config: {get_resource: ExtraConfigFile2}
 
   ExtraConfigFile3:
@@ -90,7 +90,7 @@ resources:
     type: OS::Heat::SoftwareDeployment
     depends_on: ScaleIODeployment_Step02
     properties:
-      server: {get_param: [controller_servers, '0']}
+      server: {get_param: [Controller_servers, '0']}
       config: {get_resource: ExtraConfigFile3}
 
   ExtraConfigFile4:
@@ -105,7 +105,7 @@ resources:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIODeployment_Step03
     properties:
-      servers: {get_param: controller_servers}
+      servers: {get_param: Controller_servers}
       config: {get_resource: ExtraConfigFile4}
       input_values:
         public_vip: {get_param: public_vip}
@@ -123,7 +123,7 @@ resources:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIODeployment_Step04
     properties:
-      servers: {get_param: controller_servers}
+      servers: {get_param: Controller_servers}
       config: {get_resource: ExtraConfigFile5}
       input_values:
         role: controller
@@ -132,7 +132,7 @@ resources:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIODeployment_Step04
     properties:
-      servers: {get_param: compute_servers}
+      servers: {get_param: Compute_servers}
       config: {get_resource: ExtraConfigFile5}
       input_values:
         role: novacompute
@@ -141,7 +141,7 @@ resources:
     type: OS::Heat::SoftwareDeploymentGroup
     depends_on: ScaleIODeployment_Step04
     properties:
-      servers: {get_param: blockstorage_servers}
+      servers: {get_param: BlockStorage_servers}
       config: {get_resource: ExtraConfigFile5}
       input_values:
         role: blockstorage
@@ -159,7 +159,7 @@ resources:
     type: OS::Heat::SoftwareDeployment
     depends_on: [ScaleIODeployment_Step05Controller, ScaleIODeployment_Step05Compute, ScaleIODeployment_Step05BlockStorage]
     properties:
-      server: {get_param: [controller_servers, '0']}
+      server: {get_param: [Controller_servers, '0']}
       config: {get_resource: ExtraConfigFile6}
       input_values:
         public_vip: {get_param: public_vip}
