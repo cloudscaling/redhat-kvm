@@ -5,14 +5,13 @@ source /etc/scaleio.env
 DEST='/var/lib/scaleio/repo'
 mkdir -p $DEST
 
+yum install -y wget createrepo
 packages=`curl --silent $PackagesSourceURL | grep -o 'EMC-ScaleIO-[_a-zA-Z0-9\.\-]*rpm' | sort | uniq`
 for p in $packages ; do
   if [[ ! -f "$DEST/$p" || ! -z "${FORCE_DOWNLOAD+x}" ]] ; then
     wget -P "$DEST/" "${PackagesSourceURL}${p}"
   fi
 done
-
-yum install -y createrepo
 createrepo -v $DEST/
 
 cat << EOF > /etc/yum.repos.d/scaleio.repo
