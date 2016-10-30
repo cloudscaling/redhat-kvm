@@ -13,7 +13,7 @@ function server-cmd() {
 
 api_port=${GatewayPort:-4443}
 cloud_name=$(hostname | cut -d '-' -f 1)
-controllers_internal_ips=`grep "${cloud_name}-controller-[0-9]\+-internalapi$" /etc/hosts | awk '{print($1)}' | tr '\r\n' ',' | sed 's/,$//g'`
+controllers_internal_ips=`grep "${cloud_name}-controller-[0-9]\+[-\.]internalapi$" /etc/hosts | awk '{print($1)}' | tr '\r\n' ',' | sed 's/,$//g'`
 
 # TODO: rework this. right now it rewrites haproxy configuration.
 # Configure Gateway HA

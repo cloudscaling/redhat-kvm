@@ -45,7 +45,7 @@ function is_in_list() {
 
 # NOTE: at this moment all nodes was installed and we can configure cluster
 cloud_name=$(hostname | cut -d '-' -f 1)
-controllers_internal_ips=`grep "${cloud_name}-controller-[0-9]\+-internalapi$" /etc/hosts | awk '{print($1)}' | tr '\r\n' ',' | sed 's/,$//g'`
+controllers_internal_ips=`grep "${cloud_name}-controller-[0-9]\+[-\.]internalapi$" /etc/hosts | awk '{print($1)}' | tr '\r\n' ',' | sed 's/,$//g'`
 export FACTER_mdm_ips="$controllers_internal_ips"
 
 # Register protection domains and storage pools
@@ -101,8 +101,8 @@ for node in $nodes ; do
     if [[ -n "$RFCacheDevices" ]] ; then
       sds_opts+=", rfcache_devices=>'$RFCacheDevices'"
     fi
-    node_storage_api_ip=$(awk "/${node}-storage\$/ {print(\$1)}" /etc/hosts)
-    node_storagemgmt_api_ip=$(awk "/${node}-storagemgmt\$/ {print(\$1)}" /etc/hosts)
+    node_storage_api_ip=$(awk "/${node}[-\.]storage\$/ {print(\$1)}" /etc/hosts)
+    node_storagemgmt_api_ip=$(awk "/${node}[-\.]storagemgmt\$/ {print(\$1)}" /etc/hosts)
     if [[ "$node_storage_api_ip" != "$node_storagemgmt_api_ip" ]] ; then
       sds_opts+=", ips=>'$node_storage_api_ip,$node_storagemgmt_api_ip', ip_roles=>'sdc_only,sds_only'"
     else

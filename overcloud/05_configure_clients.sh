@@ -12,7 +12,7 @@ function server-cmd() {
 }
 
 cloud_name=$(hostname | cut -d '-' -f 1)
-controllers_internal_ips=`grep "${cloud_name}-controller-[0-9]\+-internalapi$" /etc/hosts | awk '{print($1)}' | tr '\r\n' ',' | sed 's/,$//g'`
+controllers_internal_ips=`grep "${cloud_name}-controller-[0-9]\+[-\.]internalapi$" /etc/hosts | awk '{print($1)}' | tr '\r\n' ',' | sed 's/,$//g'`
 
 # install SDC to all machines.
 server-cmd "class { 'scaleio::sdc_server': mdm_ip=>'$controllers_internal_ips' }"

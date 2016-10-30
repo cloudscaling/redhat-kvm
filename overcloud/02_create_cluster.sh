@@ -32,7 +32,7 @@ if ! scli --query_cluster --approve_certificate 2>/dev/null; then
 fi
 
 cloud_name=$(hostname | cut -d '-' -f 1)
-controllers_count=$(grep -c "${cloud_name}-controller-[0-9]\+-internalapi$" /etc/hosts)
+controllers_count=$(grep -c "${cloud_name}-controller-[0-9]\+[-\.]internalapi$" /etc/hosts)
 
 # NOTE: node replacement is not supported!!!
 # TODO: calculate node roles from node list but not from node name only. here and at step 01.
@@ -57,7 +57,7 @@ if (( mode > 1 )) ; then
       continue
     fi
 
-    ip=`grep "${node}-internalapi$" /etc/hosts | awk '{print $1}'`
+    ip=`grep "${node}[-\.]internalapi$" /etc/hosts | awk '{print $1}'`
     node_index=$(echo "$node" | cut -d '-' -f 3)
     if (( node_index < slave_index )) ; then
       slave_names="$slave_names,$node"
