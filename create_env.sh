@@ -130,7 +130,7 @@ fi
 
 # define and start undercloud machine
 virt-install --name=rd-undercloud-$NUM \
-  --ram=6144 \
+  --ram=8192 \
   --vcpus=1,cores=1 \
   --os-type=linux \
   --os-variant=rhel7 \
