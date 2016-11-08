@@ -148,7 +148,7 @@ function define-machine() {
   shift
   disk_opt="$@"
   virt-install --name $name \
-    --ram 12288 \
+    --ram 8192 \
     --vcpus 2 \
     --os-variant rhel7 \
     $disk_opt \
