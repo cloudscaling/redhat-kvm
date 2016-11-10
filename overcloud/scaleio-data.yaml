@@ -14,6 +14,7 @@ parameters:
     description: Use specific puppet modules from puppet forge or use latest from upstream.
   PackagesSourceURL:
     type: string
+    default: "ftp://QNzgdxXix:Aw3wFAwAq3@ftp.emc.com/RH/2.0.10000.2072"
     description: Where to get packages of ScaleIO for installation.
   ScaleIODriverFTP:
     type: string
