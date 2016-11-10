@@ -2,26 +2,7 @@
 
 source /etc/scaleio.env
 
-DEST='/var/lib/scaleio/repo'
-mkdir -p $DEST
-
-yum install -y wget createrepo git
-packages=`curl --silent $PackagesSourceURL | grep -o 'EMC-ScaleIO-[_a-zA-Z0-9\.\-]*rpm' | sort | uniq`
-for p in $packages ; do
-  if [[ ! -f "$DEST/$p" || ! -z "${FORCE_DOWNLOAD+x}" ]] ; then
-    wget -P "$DEST/" "${PackagesSourceURL}${p}"
-  fi
-done
-createrepo -v $DEST/
-
-cat << EOF > /etc/yum.repos.d/scaleio.repo
-[scaleio]
-name=Local ScaleIO
-baseurl=file://$DEST
-gpgcheck=0
-enabled=1
-EOF
-
+yum install -y wget git
 
 if [[ "$PuppetsVersion" == "master" ]] ; then
   for dep in puppetlabs-firewall puppetlabs-stdlib puppetlabs-inifile ; do
@@ -71,23 +52,23 @@ if [[ "$role" == "controller" ]] ; then
     is_manager=0
   fi
 
-  server-cmd "class { 'scaleio::mdm_server': is_manager=>$is_manager }"
+  server-cmd "class { 'scaleio::mdm_server': is_manager=>$is_manager, pkg_src=>'$PackagesSourceURL' }"
 
   api_port=${GatewayPort:-4443}
-  server-cmd "class { 'scaleio::gateway_server': port=>'$api_port' }"
+  server-cmd "class { 'scaleio::gateway_server': port=>'$api_port', pkg_src=>'$PackagesSourceURL' }"
 
-  server-cmd "class { 'scaleio::gui_server': }"
+  server-cmd "class { 'scaleio::gui_server': pkg_src=>'$PackagesSourceURL'}"
 
 elif [[ "$role" == "novacompute" ]] ; then
 
-  server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP' }"
+  server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP', pkg_src=>'$PackagesSourceURL' }"
 
 elif [[ "$role" == "blockstorage" ]] ; then
 
-  server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP' }"
+  server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP', pkg_src=>'$PackagesSourceURL' }"
 
 fi
 
 if [[ "$RolesForSDS" =~ "$role" ]] ; then
-  server-cmd "class { 'scaleio::sds_server': ftp=>'$ScaleIODriverFTP' }"
+  server-cmd "class { 'scaleio::sds_server': ftp=>'$ScaleIODriverFTP', pkg_src=>'$PackagesSourceURL' }"
 fi
