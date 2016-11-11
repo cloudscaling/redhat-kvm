@@ -61,14 +61,14 @@ if [[ "$role" == "controller" ]] ; then
 
 elif [[ "$role" == "novacompute" ]] ; then
 
-  server-cmd "class { 'scaleio::sdc_server': drv_src=>'$ScaleIODriverFTP', pkg_src=>'$PackagesSourceURL' }"
+  server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP', pkg_src=>'$PackagesSourceURL' }"
 
 elif [[ "$role" == "blockstorage" ]] ; then
 
-  server-cmd "class { 'scaleio::sdc_server': drv_src=>'$ScaleIODriverFTP', pkg_src=>'$PackagesSourceURL' }"
+  server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP', pkg_src=>'$PackagesSourceURL' }"
 
 fi
 
 if [[ "$RolesForSDS" =~ "$role" ]] ; then
-  server-cmd "class { 'scaleio::sds_server': drv_src=>'$ScaleIODriverFTP', pkg_src=>'$PackagesSourceURL' }"
+  server-cmd "class { 'scaleio::sds_server': ftp=>'$ScaleIODriverFTP', pkg_src=>'$PackagesSourceURL' }"
 fi
