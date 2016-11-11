@@ -52,23 +52,23 @@ if [[ "$role" == "controller" ]] ; then
     is_manager=0
   fi
 
-  server-cmd "class { 'scaleio::mdm_server': is_manager=>$is_manager, pkg_src=>'$PackagesSourceURL' }"
+  server-cmd "class { 'scaleio::mdm_server': is_manager=>$is_manager, pkg_ftp=>'$PackagesSourceURL' }"
 
   api_port=${GatewayPort:-4443}
-  server-cmd "class { 'scaleio::gateway_server': port=>'$api_port', pkg_src=>'$PackagesSourceURL' }"
+  server-cmd "class { 'scaleio::gateway_server': port=>'$api_port', pkg_ftp=>'$PackagesSourceURL' }"
 
-  server-cmd "class { 'scaleio::gui_server': pkg_src=>'$PackagesSourceURL'}"
+  server-cmd "class { 'scaleio::gui_server': pkg_ftp=>'$PackagesSourceURL'}"
 
 elif [[ "$role" == "novacompute" ]] ; then
 
-  server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP', pkg_src=>'$PackagesSourceURL' }"
+  server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP', pkg_ftp=>'$PackagesSourceURL' }"
 
 elif [[ "$role" == "blockstorage" ]] ; then
 
-  server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP', pkg_src=>'$PackagesSourceURL' }"
+  server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP', pkg_ftp=>'$PackagesSourceURL' }"
 
 fi
 
 if [[ "$RolesForSDS" =~ "$role" ]] ; then
-  server-cmd "class { 'scaleio::sds_server': ftp=>'$ScaleIODriverFTP', pkg_src=>'$PackagesSourceURL' }"
+  server-cmd "class { 'scaleio::sds_server': ftp=>'$ScaleIODriverFTP', pkg_ftp=>'$PackagesSourceURL' }"
 fi
