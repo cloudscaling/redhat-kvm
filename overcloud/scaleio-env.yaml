@@ -13,5 +13,4 @@ parameter_defaults:
 
   RolesForSDS: "novacompute,blockstorage"
   PuppetsVersion: "master"
-  PackagesSourceURL: "ftp://QNzgdxXix:Aw3wFAwAq3@ftp.emc.com/RH/2.0.10000.2072"
   DevicePaths: /dev/vdb
