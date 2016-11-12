@@ -33,6 +33,7 @@ function server-cmd() {
 }
 
 if [[ "$role" == "controller" ]] ; then
+  echo "Step 01. Role is '$role'"
 
   cloud_name=$(hostname | cut -d '-' -f 1)
   controllers_count=$(grep -c "${cloud_name}-controller-[0-9]\+[-\.]internalapi$" /etc/hosts)
@@ -60,14 +61,15 @@ if [[ "$role" == "controller" ]] ; then
   server-cmd "class { 'scaleio::gui_server': pkg_ftp=>'$PackagesSourceURL'}"
 
 elif [[ "$role" == "novacompute" ]] ; then
-
-  server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP', pkg_ftp=>'$PackagesSourceURL' }"
+  echo "Step 01. Role is '$role'"
 
 elif [[ "$role" == "blockstorage" ]] ; then
-
-  server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP', pkg_ftp=>'$PackagesSourceURL' }"
+  echo "Step 01. Role is '$role'"
 
 fi
+
+# step 05 calls sdc_server for all to set MDM ips. so it must be installed for all.
+server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP', pkg_ftp=>'$PackagesSourceURL' }"
 
 if [[ "$RolesForSDS" =~ "$role" ]] ; then
   server-cmd "class { 'scaleio::sds_server': ftp=>'$ScaleIODriverFTP', pkg_ftp=>'$PackagesSourceURL' }"
