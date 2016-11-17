@@ -9,7 +9,7 @@ parameter_defaults:
   CinderEnableRbdBackend: false
   CinderEnableNfsBackend: false
   NovaEnableRbdBackend: false
-  GlanceBackend: cinder
+  GlanceBackend: file
   UseScaleioForGlance: true
 
   RolesForSDS: "novacompute,blockstorage"
