@@ -9,7 +9,8 @@ parameter_defaults:
   CinderEnableRbdBackend: false
   CinderEnableNfsBackend: false
   NovaEnableRbdBackend: false
-  GlanceBackend: file
+  GlanceBackend: cinder
+  UseScaleioForGlance: true
 
   RolesForSDS: "novacompute,blockstorage"
   PuppetsVersion: "master"
