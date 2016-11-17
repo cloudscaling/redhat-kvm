@@ -23,7 +23,8 @@ if [[ "$role" == "controller" ]] ; then
 
   if [[ "$UseScaleioForGlance" == "True" ]] ; then
     echo "Enable using ScaleIO for Glance"
-    server-cmd "class { 'scaleio_openstack::glance':  }"
+    region="$(hiera keystone::endpoint::region)"
+    server-cmd "class { 'scaleio_openstack::glance': cinder_region => '$region' }"
   fi
 
 elif [[ "$role" == "novacompute" ]] ; then
