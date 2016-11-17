@@ -22,8 +22,8 @@ gateway_port=${GatewayPort:-4443}
 if [[ "$role" == "controller" ]] ; then
 
   if [[ "$UseScaleioForGlance" == "True" ]] ; then
-    echo "TODO: Implement glance support"
-    # server-cmd "class { 'scaleio_openstack::glance': }"
+    echo "Enable using ScaleIO for Glance"
+    server-cmd "class { 'scaleio_openstack::glance':  }"
   fi
 
 elif [[ "$role" == "novacompute" ]] ; then
