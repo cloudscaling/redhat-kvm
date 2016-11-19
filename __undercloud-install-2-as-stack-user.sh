@@ -46,6 +46,10 @@ function create_images() {
   export DELOREAN_TRUNK_REPO="http://trunk.rdoproject.org/centos7-$OPENSTACK_VERSION/current/"
   export DIB_YUM_REPO_CONF=/etc/yum.repos.d/delorean*
 
+  # package redhat-lsb-core is absent due to some bug in newton image
+  # workaround is to add ceph repo:
+  export DIB_YUM_REPO_CONF="$DIB_YUM_REPO_CONF /etc/yum.repos.d/CentOS-Ceph-Hammer.repo"
+
   #export DELOREAN_TRUNK_REPO="http://buildlogs.centos.org/centos/7/cloud/x86_64/rdo-trunk-master-tripleo/"
   #export DIB_INSTALLTYPE_puppet_modules=source
 
