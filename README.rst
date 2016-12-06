@@ -19,7 +19,11 @@ clean_env.sh - removes all
 undercloud-install.sh - installs undercloud on the undercloud machine
 overcloud-install.sh - installs overcloud
 
-overcloud directory contains environment/templates for TripleO/Heat.
+tripleo.mitaka.diff and tripleo.newton.diff - patches for tripleo heat templates
+ScaleIO deployment needs several linked steps. And these steps must be syncronized between all nodes with various roles.
+But TripleO doesn't have such extension. So these patches adds an 'AllNodesExtraConfigPost' resource that runs last and is synchronized between all nodes.
+
+overcloud directory contains environment/templates for TripleO/Heat for deployment with ScaleIO.
 This directory will be extracted from this repository.
 
 most of script files has definition of 'NUM' variable at start.
@@ -33,8 +37,11 @@ Install steps
 
    .. code-block:: console
       
+      # set number of environment (from 0 to 6)
       export NUM=0
+      # set version of OpenStack (starting from mitaka)
       export OPENSTACK_VERSION='mitaka'
+      # and run
       sudo ./create_env.sh
       sudo ./undercloud-install.sh
       # address depends on NUM varaible. check previous output for exact address

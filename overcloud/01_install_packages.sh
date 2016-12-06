@@ -2,9 +2,12 @@
 
 source /etc/scaleio.env
 
+# install packages needed for deployment
 yum install -y wget git
 
+# install puppets for ScaleIO deployment
 if [[ "$PuppetsVersion" == "master" ]] ; then
+  # last version from github
   for dep in puppetlabs-firewall puppetlabs-stdlib puppetlabs-inifile ; do
     puppet module install $dep || /bin/true
   done
@@ -13,6 +16,7 @@ if [[ "$PuppetsVersion" == "master" ]] ; then
   rm -rf /etc/puppet/modules/scaleio_openstack
   git clone -q https://github.com/emccode/puppet-scaleio-openstack /etc/puppet/modules/scaleio_openstack
 else
+  # or stable version from puppet forge
   # NOTE: this module can't be installed due to strange installed modules
   # script fixes pacemaker's metadata to avoid bug at installation
   sed -i 's/>\~1\.7\.0/>=1.7.0/g' /etc/puppet/modules/pacemaker/metadata.json
@@ -35,6 +39,7 @@ function server-cmd() {
 if [[ "$role" == "controller" ]] ; then
   echo "Step 01. Role is '$role'"
 
+  # calculate count of MDM's and current node role
   cloud_name=$(hostname | cut -d '-' -f 1)
   controllers_count=$(grep -c "${cloud_name}-controller-[0-9]\+[-\.]internalapi$" /etc/hosts)
   if (( controllers_count < 3 )) ; then
@@ -53,11 +58,14 @@ if [[ "$role" == "controller" ]] ; then
     is_manager=0
   fi
 
+  # install MDM
   server-cmd "class { 'scaleio::mdm_server': is_manager=>$is_manager, pkg_ftp=>'$PackagesSourceURL' }"
 
+  # install Gateway
   api_port=${GatewayPort:-4443}
   server-cmd "class { 'scaleio::gateway_server': port=>'$api_port', pkg_ftp=>'$PackagesSourceURL' }"
 
+  # install GUI
   server-cmd "class { 'scaleio::gui_server': pkg_ftp=>'$PackagesSourceURL'}"
 
 elif [[ "$role" == "novacompute" ]] ; then
@@ -72,5 +80,6 @@ fi
 server-cmd "class { 'scaleio::sdc_server': ftp=>'$ScaleIODriverFTP', pkg_ftp=>'$PackagesSourceURL' }"
 
 if [[ "$RolesForSDS" =~ "$role" ]] ; then
+  # install SDS
   server-cmd "class { 'scaleio::sds_server': ftp=>'$ScaleIODriverFTP', pkg_ftp=>'$PackagesSourceURL' }"
 fi

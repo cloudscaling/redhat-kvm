@@ -17,6 +17,7 @@
 
 source /etc/scaleio.env
 
+# used for debug purposes
 cat /etc/hosts
 
 function server-cmd() {

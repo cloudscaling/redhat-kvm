@@ -23,8 +23,11 @@ internal_ip=`python -c "import socket; print(sorted(socket.gethostbyname_ex('$na
 # NOTE: this code should be run only on master
 # next code must be idempotent!!!
 if ! scli --query_cluster --approve_certificate 2>/dev/null; then
+  # create cluster
   server-cmd "class { 'scaleio::mdm_server': master_mdm_name=>'$name', mdm_ips=>'$internal_ip', is_manager=>1 }"
+  # do first login
   server-cmd "scaleio::login { 'first login': password=>'admin' }"
+  # change admin's password
   server-cmd "scaleio::cluster { 'cluster': password=>'admin', new_password=>'$ScaleIOAdminPassword' }"
   # create client_user and set password for him
   # and set high performance profile for all
@@ -48,6 +51,7 @@ else
 fi
 
 if (( mode > 1 )) ; then
+  # configure slave and tie-breaker if count of nodes more than one
   slave_names=""
   tb_names=""
   nodes=`grep -o "${cloud_name}-controller-[0-9]\+\$" /etc/hosts`
@@ -75,5 +79,5 @@ if (( mode > 1 )) ; then
   cluster-cmd "scaleio::cluster { 'cluster': cluster_mode=>'$mode', slave_names=>'$slave_names', tb_names=>'$tb_names' }"
 fi
 
-# TODO: add and provide options for cluster
+# TODO: add and provide additional options for cluster
 # license-file-path, capacity-high-alert-threshold, capacity-critical-alert-threshold
