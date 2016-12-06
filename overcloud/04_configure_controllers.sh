@@ -42,22 +42,34 @@ if [[ -n "$public_vip" && "$use_load_balancer" == "true" ]] ; then
       ipaddresses => [$main_server_ip], \
       server_names => [$main_server_name], \
       options => 'check inter 10s fastinter 2s downinter 3s rise 3 fall 3', \
-    } -> \
-    haproxy::balancermember { 'scaleio-gateway-backup': \
-      listening_service => 'scaleio-gateway', \
-      ports => ${int_api_port}, \
-      ipaddresses => [$backup_server_ips], \
-      server_names => [$backup_server_names], \
-      options => 'backup check inter 10s fastinter 2s downinter 3s rise 3 fall 3', \
-    } -> \
-    class { '::tripleo::loadbalancer' : \
-      controller_hosts       => [$main_server_ip,$backup_server_ips], \
-      controller_hosts_names => [$main_server_name,$backup_server_names], \
-      manage_vip             => false, \
-      mysql_clustercheck     => true, \
-      haproxy_service_manage => false, \
-    }
+    } \
   "
+  if [[ "$backup_server_ips" != "$main_server_ip" ]] ; then
+    cmd+=" -> \
+      haproxy::balancermember { 'scaleio-gateway-backup': \
+        listening_service => 'scaleio-gateway', \
+        ports => ${int_api_port}, \
+        ipaddresses => [$backup_server_ips], \
+        server_names => [$backup_server_names], \
+        options => 'backup check inter 10s fastinter 2s downinter 3s rise 3 fall 3', \
+      } \
+    "
+  fi
+  #TODO: rework version detection (not needed if put the code into the tripleo puppet)
+  if grep -qr 'mitaka' /etc/yum.repos.d ; then
+    cmd+=" -> \
+      class { '::tripleo::loadbalancer' : \
+        controller_hosts       => [$main_server_ip,$backup_server_ips], \
+        controller_hosts_names => [$main_server_name,$backup_server_names], \
+        manage_vip             => false, \
+        mysql_clustercheck     => true, \
+        haproxy_service_manage => false, \
+      } \
+    "
+  else
+    cmd+="include ::tripleo::haproxy"
+  fi
+
   server-cmd "$cmd"
   service haproxy restart
 else
