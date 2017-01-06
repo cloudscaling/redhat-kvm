@@ -33,6 +33,7 @@ ssh -t $ssh_opts $ssh_addr "NUM=$NUM NETDEV=$NETDEV SKIP_SSH_TO_HOST_KEY=$SKIP_S
 # TODO: temporary solution - 'overcloud' directory will be moved to separate repository later
 rm -f "$my_dir/oc.tar"
 pushd "$my_dir"
+cat "  PackagesSourceURL: \"ftp://QNzgdxXix:Aw3wFAwAq3@ftp.emc.com/RH/${SCALEIO_VERSION}\"" >> overcloud/scaleio-env.yaml
 tar cvf oc.tar overcloud
 popd
 scp $ssh_opts "$my_dir/oc.tar" ${ssh_addr}:/home/stack/oc.tar
