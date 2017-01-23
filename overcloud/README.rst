@@ -21,9 +21,9 @@ Scripts
 
 Here is scripts for ScaleIO installation and configuring.
 
-01_install_packages.sh
-02_create_cluster.sh
-03_configure_cluster.sh
-04_configure_controllers.sh
-05_configure_clients.sh
-06_post_configure_cluster.sh
+- 01_install_packages.sh
+- 02_create_cluster.sh
+- 03_configure_cluster.sh
+- 04_configure_controllers.sh
+- 05_configure_clients.sh
+- 06_post_configure_cluster.sh
