@@ -1,7 +1,7 @@
 Overview
 ========
 
-This repository provides scripts for installing TripleO with ScaleIO on kvm host.
+This repository provides scripts for installing TripleO with ScaleIO on host with kvm virtualization enabled.
 
 
 Prepare steps
@@ -14,22 +14,23 @@ Prepare steps
 Files and parameters
 ====================
 
-create_env.sh - creates machines/networks/volumes
-clean_env.sh - removes all
-undercloud-install.sh - installs undercloud on the undercloud machine
-overcloud-install.sh - installs overcloud
-
-tripleo.mitaka.diff and tripleo.newton.diff - patches for tripleo heat templates
-ScaleIO deployment needs several linked steps. And these steps must be syncronized between all nodes with various roles.
-But TripleO doesn't have such extension. So these patches adds an 'AllNodesExtraConfigPost' resource that runs last and is synchronized between all nodes.
-
-overcloud directory contains environment/templates for TripleO/Heat for deployment with ScaleIO.
-This directory will be extracted from this repository.
-
 most of script files has definition of 'NUM' variable at start.
 It allows to use several environments.
 
-also create_env.sh defines machines counts for each role
+create_env.sh - creates machines/networks/volumes on host regarding to 'NUM' environment variable. Also it defines machines counts for each role.
+
+clean_env.sh - removes all for 'NUM' environment.
+
+undercloud-install.sh - installs undercloud on the undercloud machine. This script (and sub-scripts) uses simplpe CentOS cloud image for building undercloud. Script patches this image to be able to ssh into it and run the image with QEMU. Then script logins (via ssh) into the VM and adds standard delorean repos. Then script installs undercloud by command 'openstack undercloud install' and TripleO does all work for installing needed software and generates/uploads images for overcloud. After these steps we have standard undercloud deployment. But also this script patches some TripleO files for correct work of next steps.
+
+tripleo.mitaka.diff and tripleo.newton.diff - patches for tripleo heat templates
+
+Reason why these patches were create is that ScaleIO deployment needs several linked steps. And these steps must be syncronized between all nodes with various roles. But TripleO doesn't have such extension. So these patches adds an 'AllNodesExtraConfigPost' resource that runs last and is synchronized between all nodes.
+
+overcloud-install.sh - installs overcloud
+
+overcloud directory contains environment/templates for TripleO/Heat for deployment with ScaleIO.
+This directory will be extracted from this repository.
 
 
 Install steps
@@ -50,6 +51,8 @@ Install steps
       ./overcloud-install.sh
 
 And then last command shows deploy command that can be used in current shell or in the screen utility
+
+If you already have deployed undercloud then you can patch it once for ScaleIO templates and then deploy OpenStack with ScaleIO as you want using ScaleIO templates and environment files from 'overcloud' directory.
 
 
 Instructions was used
